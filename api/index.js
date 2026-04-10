@@ -30,11 +30,15 @@ app.get('/api/health', (req, res) => {
 import authRoutes from './routes/auth.routes.js';
 import bookingsRoutes from './routes/bookings.routes.js';
 import paymentsRoutes from './routes/payments.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import disputesRoutes from './routes/disputes.routes.js';
 
 // Mount API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/payments', paymentsRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/disputes', disputesRoutes);
 
 export default app;
 

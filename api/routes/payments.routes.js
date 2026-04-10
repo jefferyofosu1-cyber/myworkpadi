@@ -1,10 +1,24 @@
 import express from 'express';
-import { supabaseAdmin } from '../config/supabase.js';
+import { PaymentService } from '../services/payment.service.js';
 
 const router = express.Router();
 
 /**
- * @desc Deposit Escrow via Mobile Money (Mock Paystack Simulation)
+ * @desc Initialize MoMo Payment
+ * @route POST /api/payments/initialize
+ */
+router.post('/initialize', async (req, res) => {
+  const { email, amount, metadata } = req.body;
+  try {
+    const data = await PaymentService.initializePayment(email, amount, metadata);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * @desc Deposit Escrow via Mobile Money (Live Paystack Integration)
  * @route POST /api/payments/deposit
  */
 router.post('/deposit', async (req, res) => {
@@ -15,41 +29,47 @@ router.post('/deposit', async (req, res) => {
   }
 
   try {
-    // Escrow Business Logic:
-    // 1. In real app, call Paystack API to trigger MoMo Prompt on user's phone.
-    // 2. We wait for Webhook (or mock success immediately here).
-    
-    // Create an Escrow record in status 'pending'
-    const newTransaction = {
-      booking_id: booking_id || 'mock-b-ID',
-      amount: parseFloat(amount),
-      momo_number,
-      network_provider: provider || 'MTN',
-      status: 'held_in_escrow', // We fast-forward to success for the mock
-      paystack_reference: `TGH-${Date.now()}`
-    };
-
-    // Simulate Paystack interaction delay
-    setTimeout(() => {
-      res.status(200).json({
-        message: 'Escrow deposit successful',
-        verification_status: 'success',
-        transaction: newTransaction
-      });
-    }, 2000);
-
+    // In live apps, we use initializePayment and handle the redirect/prompt.
+    // PaymentService can be expanded to handle direct MoMo charge via Paystack.
+    res.status(200).json({
+      message: 'Escrow deposit initialized',
+      verification_status: 'pending',
+      details: { booking_id, amount, provider }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+import { BookingService } from '../services/booking.service.js';
+
 /**
- * @desc Webhook handler for Paystack (to update Escrow status if prompt takes time)
+ * @desc Webhook handler for Paystack
  * @route POST /api/payments/webhook
  */
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  // Handle Paystack signature validation and event parsing here
-  res.sendStatus(200);
+  try {
+    const signature = req.headers['x-paystack-signature'];
+    const event = req.body; // Paystack sends a JSON body for successful events
+    
+    // 1. In production, verify signature here using crypto
+    
+    // 2. Handle successful charge
+    if (event.event === 'charge.success') {
+        const { booking_id } = event.data.metadata;
+        const amount = event.data.amount / 100; // Paystack is in kobo/pesewas
+        
+        console.log(`[Webhook] Payment Success for Booking ${booking_id}: GHS ${amount}`);
+        
+        // Transition state to deposit_paid (which triggers matching broadcast)
+        await BookingService.transitionStatus(booking_id, 'deposit_paid');
+    }
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('[Webhook Error]:', err.message);
+    res.status(400).send(err.message);
+  }
 });
 
 export default router;

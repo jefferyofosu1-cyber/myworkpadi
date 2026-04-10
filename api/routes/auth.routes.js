@@ -1,5 +1,5 @@
 import express from 'express';
-import { supabase, supabaseAdmin } from '../config/supabase.js';
+import { AuthService } from '../services/auth.service.js';
 
 const router = express.Router();
 
@@ -8,47 +8,19 @@ const router = express.Router();
  * @route POST /api/auth/trigger-otp
  */
 router.post('/trigger-otp', async (req, res) => {
-  const { identifier } = req.body; // e.g. 'joe@gmail.com' or '0244123456'
+  const { identifier } = req.body; 
 
   if (!identifier) {
-    return res.status(400).json({ error: 'Identifier is required (Email or Phone)' });
+    return res.status(400).json({ error: 'Phone number is required' });
   }
 
   try {
-    const isEmail = identifier.includes('@');
-    
-    // In a real scenario, Supabase handles sending the OTP.
-    // For local mocking without a real Supabase endpoint active yet, we pretend it worked.
-    let data, error;
-    
-    if (isEmail) {
-      ({ data, error } = await supabase.auth.signInWithOtp({
-        email: identifier,
-        options: { shouldCreateUser: true }
-      }));
-    } else {
-      // Format phone for Ghana +233
-      let phone = identifier;
-      if (phone.startsWith('0')) {
-        phone = '+233' + phone.substring(1);
-      }
-      ({ data, error } = await supabase.auth.signInWithOtp({
-        phone: phone
-      }));
-    }
-
-    // Since we don't have a real Supabase url injected, the client might timeout.
-    // We'll wrap in try-catch to simulate success locally if Supabase isn't hooked up.
-    if (error) throw error;
-    
-    res.json({ message: `OTP sent to ${identifier}`, data });
+    // Note: identifier here is assumed to be phone for the core TaskGH flow
+    const result = await AuthService.requestOTP(identifier);
+    res.json({ message: `OTP sent to ${identifier}`, data: result });
   } catch (err) {
-    console.error('Supabase Auth Error:', err.message);
-    // Fallback Mock Response
-    res.status(200).json({ 
-      warning: 'Using Mock Mode: Simulate OTP Sent successfully', 
-      isMock: true 
-    });
+    console.error('Auth Service Error:', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -64,22 +36,16 @@ router.post('/verify-otp', async (req, res) => {
   }
 
   try {
-    const isEmail = identifier.includes('@');
-    const authPayload = isEmail ? { email: identifier, token, type: 'magiclink' } : { phone: identifier, token, type: 'sms' };
-
-    const { data, error } = await supabase.auth.verifyOtp(authPayload);
-
-    if (error) throw error;
-
-    res.json({ message: 'Authentication successful', session: data.session });
-  } catch (err) {
-    console.error('Supabase Verification Error:', err.message);
-    // Fallback Mock Response for UI flow testing
-    res.status(200).json({ 
-      warning: 'Using Mock Mode: Authentication Successful', 
-      isMock: true,
-      session: { user: { id: 'mock-user-123' }, access_token: 'mock-jwt-token' }
+    const result = await AuthService.verifyOTP(identifier, token);
+    res.json({ 
+      message: 'Authentication successful', 
+      token: result.token,
+      refreshToken: result.refreshToken,
+      user: result.user 
     });
+  } catch (err) {
+    console.error('Verification Error:', err.message);
+    res.status(401).json({ error: err.message });
   }
 });
 
