@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "start": "node api/index.js",
-    "test": "node api/verify_setup.js"
+    "test": "node server/verify_setup.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",

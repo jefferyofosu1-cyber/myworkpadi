@@ -27,11 +27,11 @@ app.get('/api/health', (req, res) => {
 });
 
 // Import API Routes
-import authRoutes from './routes/auth.routes.js';
-import bookingsRoutes from './routes/bookings.routes.js';
-import paymentsRoutes from './routes/payments.routes.js';
-import adminRoutes from './routes/admin.routes.js';
-import disputesRoutes from './routes/disputes.routes.js';
+import authRoutes from '../server/routes/auth.routes.js';
+import bookingsRoutes from '../server/routes/bookings.routes.js';
+import paymentsRoutes from '../server/routes/payments.routes.js';
+import adminRoutes from '../server/routes/admin.routes.js';
+import disputesRoutes from '../server/routes/disputes.routes.js';
 
 // Mount API Routes
 app.use('/api/auth', authRoutes);
