@@ -75,6 +75,11 @@ export class BookingService {
         throw new Error(`Invalid state transition: Cannot move from ${currentStatus} to ${targetStatus}`);
     }
 
+    // Enforce receipt upload gate for Assessment jobs (Process 2 Step 7)
+    if (targetStatus === 'in_progress' && booking.b_type === 'assessment' && !booking.materials_receipt_url) {
+        throw new Error('Materials receipt photo must be uploaded before starting work.');
+    }
+
     // Apply state change
     const { data: updatedBooking, error: updateErr } = await supabase
       .from('bookings')
@@ -85,9 +90,13 @@ export class BookingService {
 
     if (updateErr) throw new Error(`Status update failed: ${updateErr.message}`);
     
+    // Process 2 Final Step: If customer confirms completion, trigger final payout
+    if (targetStatus === 'confirmed') {
+        // PayoutService.releaseFinalPayment(bookingId) // Stub for Process 3 logic
+        console.log(`[Flow] Job ${bookingId} confirmed. Full funds ready for release.`);
+    }
+
     // Process 4 Trigger: Broadcast if job is ready for matching
-    // Logic: If it's a fixed job (b_type='fixed') and moved to 'deposit_paid', OR
-    // If it's an assessment job and moved from 'requested' to 'assessment'
     if (targetStatus === 'deposit_paid' || (targetStatus === 'assessment' && currentStatus === 'requested')) {
         MatchingService.broadcastJob(
            updatedBooking.id, 
@@ -98,5 +107,20 @@ export class BookingService {
     }
     
     return updatedBooking;
+  }
+
+  /**
+   * Uploads the materials receipt (Step 7 - Assessment)
+   */
+  static async uploadReceipt(bookingId, receiptUrl) {
+      const { data, error } = await supabase
+        .from('bookings')
+        .update({ materials_receipt_url: receiptUrl })
+        .eq('id', bookingId)
+        .select()
+        .single();
+      
+      if (error) throw new Error('Receipt upload failed');
+      return data;
   }
 }

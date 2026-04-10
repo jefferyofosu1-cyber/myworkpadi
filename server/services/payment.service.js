@@ -126,15 +126,30 @@ export class PaymentService {
         note: `Paystack webhook charge.success (Ref: ${reference})`
       });
 
-      // 4. Trigger the Booking State Machine
+      // 4. Trigger the Booking State Machine and handling the Split (Process 2)
       if (meta.payment_type === 'deposit') {
+        const { data: quote } = await supabase
+          .from('quotes')
+          .select('materials_cost, labor_cost')
+          .eq('booking_id', bookingId)
+          .eq('status', 'approved')
+          .single();
+
+        if (quote) {
+          // Release Materials immediately (Process 2 Step 6)
+          await supabase.from('escrow_ledger').insert({
+            booking_id: bookingId,
+            amount_ghs: quote.materials_cost,
+            e_type: 'released', // This marks it as paid out
+            note: 'Immediate materials release upon deposit'
+          });
+          console.log(`[Flow] Released GHS ${quote.materials_cost} materials to Tasker.`);
+        }
+
         await BookingService.transitionStatus(bookingId, 'deposit_paid');
       } else if (meta.payment_type === 'assessment') {
-        const { data: bk } = await supabase.from('bookings').select('tasker_id').eq('id', bookingId).single();
-        // If it already had a tasker assigned somehow, jump to assessment.
-        if(bk && bk.tasker_id) {
-           await BookingService.transitionStatus(bookingId, 'assessment');
-        }
+        // Assessment fees are now GHS 100
+        await BookingService.transitionStatus(bookingId, 'assessment');
       }
 
       return true;

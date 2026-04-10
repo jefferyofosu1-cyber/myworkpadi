@@ -81,9 +81,33 @@ CREATE TABLE IF NOT EXISTS public.bookings (
   location_coords extensions.geography(POINT, 4326),
   scheduled_at TIMESTAMP WITH TIME ZONE,
   quoted_price DECIMAL(10,2),
-  assessment_fee_ghs DECIMAL(10,2) DEFAULT 0.00,
+  assessment_fee_ghs DECIMAL(10,2) DEFAULT 100.00,
+  materials_receipt_url TEXT, -- Photo proof to unblock job start
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Quotes (For Assessment Flow breakdown)
+CREATE TABLE IF NOT EXISTS public.quotes (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  booking_id UUID REFERENCES public.bookings(id) ON DELETE CASCADE,
+  tasker_id UUID REFERENCES public.tasker_profiles(id),
+  labor_cost DECIMAL(10,2) NOT NULL,
+  materials_cost DECIMAL(10,2) NOT NULL,
+  total_cost DECIMAL(10,2) GENERATED ALWAYS AS (labor_cost + materials_cost) STORED,
+  status TEXT DEFAULT 'pending', -- pending, approved, declined
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Reviews (Process 2 Step 6)
+CREATE TABLE IF NOT EXISTS public.reviews (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  booking_id UUID REFERENCES public.bookings(id) ON DELETE CASCADE,
+  reviewer_id UUID REFERENCES public.profiles(id),
+  reviewee_id UUID REFERENCES public.profiles(id),
+  rating INT CHECK (rating >= 1 AND rating <= 5),
+  comment TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- Escrow Payments
