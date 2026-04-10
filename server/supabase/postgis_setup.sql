@@ -23,12 +23,19 @@ ALTER TYPE public.booking_status ADD VALUE IF NOT EXISTS 'refunded';
 -- We store coordinates as geography(POINT, 4326) for easy distance calc in meters
 
 ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS momo_number TEXT,
+ADD COLUMN IF NOT EXISTS residential_area TEXT,
 ADD COLUMN IF NOT EXISTS location_coords extensions.geography(POINT, 4326);
 
 ALTER TABLE public.bookings 
 ADD COLUMN IF NOT EXISTS location_coords extensions.geography(POINT, 4326);
 
 ALTER TABLE public.tasker_profiles 
+ADD COLUMN IF NOT EXISTS ghana_card_front_url TEXT,
+ADD COLUMN IF NOT EXISTS ghana_card_back_url TEXT,
+ADD COLUMN IF NOT EXISTS hourly_rate DECIMAL(10,2) DEFAULT 0.00,
+ADD COLUMN IF NOT EXISTS working_hours JSONB DEFAULT '{}',
+ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT TRUE,
 ADD COLUMN IF NOT EXISTS service_radius_meters INT DEFAULT 10000; -- Default 10km
 
 -- 4. RPC for High-Performance Geo-Matching

@@ -32,6 +32,7 @@ import bookingsRoutes from '../server/routes/bookings.routes.js';
 import paymentsRoutes from '../server/routes/payments.routes.js';
 import adminRoutes from '../server/routes/admin.routes.js';
 import disputesRoutes from '../server/routes/disputes.routes.js';
+import profileRoutes from '../server/routes/profile.routes.js';
 
 // Mount API Routes
 app.use('/api/auth', authRoutes);
@@ -39,6 +40,7 @@ app.use('/api/bookings', bookingsRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/disputes', disputesRoutes);
+app.use('/api/profiles', profileRoutes);
 
 export default app;
 

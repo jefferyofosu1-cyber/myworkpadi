@@ -1,0 +1,62 @@
+import { supabase } from '../config/supabase.js';
+
+export class ProfileService {
+  /**
+   * Updates basic profile information (Process 1 - Customer Step 4)
+   */
+  static async updateMyProfile(userId, { fullName, momoNumber, residentialArea }) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: fullName,
+        momo_number: momoNumber,
+        residential_area: residentialArea,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Profile update failed: ${error.message}`);
+    return data;
+  }
+
+  /**
+   * Updates tasker-specific details (Process 1 - Tasker Step 6)
+   */
+  static async updateTaskerBusiness(userId, { hourlyRate, workingHours, isAvailable }) {
+    const { data, error } = await supabase
+      .from('tasker_profiles')
+      .update({
+        hourly_rate: hourlyRate,
+        working_hours: workingHours,
+        is_available: isAvailable,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Tasker business update failed: ${error.message}`);
+    return data;
+  }
+
+  /**
+   * Links ID card URLs after Cloudinary upload (Process 1 - Tasker Step 3)
+   */
+  static async linkIdentityCards(userId, frontUrl, backUrl) {
+    const { data, error } = await supabase
+      .from('tasker_profiles')
+      .update({
+        ghana_card_front_url: frontUrl,
+        ghana_card_back_url: backUrl,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Identity card link failed: ${error.message}`);
+    return data;
+  }
+}

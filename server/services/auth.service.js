@@ -55,7 +55,7 @@ export class AuthService {
    * Verifies the OTP, provisions a new Supabase user if not exists, 
    * and generates a JWT session.
    */
-  static async verifyOTP(phone, otp) {
+  static async verifyOTP(phone, otp, isTasker = false) {
     const cachedOtp = await redis.get(`otp:${phone}`);
     
     if (!cachedOtp) {
@@ -69,40 +69,45 @@ export class AuthService {
     // OTP is valid! Remove it.
     await redis.del(`otp:${phone}`);
 
-    // Check if user exists in Supabase DB
+    // Check if user exists in Supabase DB (Table is 'profiles')
     let { data: user, error: fetchError } = await supabase
-      .from('users')
-      .select('id, role')
-      .eq('phone', phone)
+      .from('profiles')
+      .select('id, is_tasker')
+      .eq('phone_number', phone)
       .single();
 
     if (fetchError && fetchError.code === 'PGRST116') {
       // User doesn't exist, create via Supabase Admin API
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         phone: phone,
-        phone_confirm: true, // Auto-confirm since we just verified OTP
+        phone_confirm: true, 
       });
 
       if (authError) throw new Error('Failed to provision user: ' + authError.message);
       
       const newUserId = authData.user.id;
       
-      // Create user record in our tracking table
+      // 1. Create base profile record
       const { data: newUser, error: insertError } = await supabase
-        .from('users')
-        .insert({ id: newUserId, phone: phone, role: 'customer' })
-        .select('id, role')
+        .from('profiles')
+        .insert({ id: newUserId, phone_number: phone, is_tasker: isTasker })
+        .select('id, is_tasker')
         .single();
         
-      if (insertError) throw new Error('Failed to create user record');
+      if (insertError) throw new Error('Failed to create user profile');
       user = newUser;
+
+      // 2. If Tasker, initialize the tasker-specific profile (Step 1-2 Tasker Onboarding)
+      if (isTasker) {
+        await supabase.from('tasker_profiles').insert({ id: newUserId, is_verified: false });
+      }
     } else if (fetchError) {
-      throw new Error('Database error fetching user');
+      throw new Error('Database error fetching user profile');
     }
 
     // Generate JWTs
     const token = jwt.sign(
-      { userId: user.id, role: user.role, phone },
+      { userId: user.id, role: user.is_tasker ? 'tasker' : 'customer', phone },
       process.env.JWT_SECRET || 'fallback-secret-here',
       { expiresIn: '15m' }
     );
