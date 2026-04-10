@@ -1,86 +1,238 @@
 import { supabase } from '../config/supabase.js';
 import { NotificationService } from './notification.service.js';
+import { RefundService } from './refund.service.js';
 
 export class DisputeService {
   /**
    * Raises a new dispute for a booking.
+   * Enforces 24-hour window from job completion/confirmation.
    */
-  static async raiseDispute(bookingId, userId, reason, evidenceUrls = []) {
-    // 1. Verify booking exists and belongs to the user (or assigned tasker)
-    const { data: booking, error: fetchErr } = await supabase
+  static async raiseDispute(bookingId, userId, category, reason, evidenceUrls = []) {
+    // 1. Fetch Booking and verify 24h window
+    const { data: booking, error: bErr } = await supabase
       .from('bookings')
-      .select('id, status, customer_id, tasker_id')
+      .select('*, profiles!bookings_customer_id_fkey(full_name)')
       .eq('id', bookingId)
       .single();
 
-    if (fetchErr || !booking) throw new Error('Booking not found');
-    
-    if (booking.customer_id !== userId && booking.tasker_id !== userId) {
-        throw new Error('Unauthorized to raise dispute on this booking');
+    if (bErr || !booking) throw new Error('Booking not found');
+
+    const confirmedAt = new Date(booking.updated_at);
+    const now = new Date();
+    const hoursSinceCompletion = (now - confirmedAt) / (1000 * 60 * 60);
+
+    if (booking.status !== 'confirmed' && booking.status !== 'completed') {
+        throw new Error('Disputes can only be raised for completed or confirmed jobs.');
+    }
+
+    if (hoursSinceCompletion > 24) {
+        throw new Error('Dispute window expired. Disputes must be raised within 24 hours of job completion.');
     }
 
     // 2. Create Dispute Record
-    const { data: dispute, error: disputeErr } = await supabase
+    const slaExpiresAt = new Date(now.getTime() + 4 * 60 * 60 * 1000); // +4 Hours
+
+    const { data: dispute, error: dErr } = await supabase
       .from('disputes')
       .insert({
         booking_id: bookingId,
         raised_by: userId,
+        category,
         reason,
         evidence_urls: evidenceUrls,
-        status: 'open'
+        status: 'open',
+        sla_expires_at: slaExpiresAt.toISOString()
       })
       .select()
       .single();
 
-    if (disputeErr) throw new Error('Failed to create dispute record');
+    if (dErr) throw new Error(`Dispute creation failed: ${dErr.message}`);
 
-    // 3. Update Booking Status to 'disputed'
-    const { error: updateErr } = await supabase
-      .from('bookings')
-      .update({ status: 'disputed' })
-      .eq('id', bookingId);
+    // High Priority Safety Escalation
+    if (category === 'SAFETY') {
+        console.error(`[CRITICAL] Safety Incident reported by ${booking.profiles?.full_name} for Booking ${bookingId}`);
+        await NotificationService.sendSMS('SUPPORT_LEAD_PHONE', `CRITICAL SAFETY INCIDENT: Booking ${bookingId}. Investigate immediately.`);
+    }
 
-    if (updateErr) throw new Error('Failed to update booking status');
+    // 3. Transition Booking status
+    const { BookingService } = await import('./booking.service.js');
+    await BookingService.transitionStatus(bookingId, 'disputed');
 
-    // 4. Notify Admin
-    console.log(`[Dispute] New dispute raised for booking ${bookingId} by ${userId}`);
-    // NotificationService.sendAdminAlert('New Dispute Raised', { bookingId, reason });
+    // 4. Notify Admin Queue (Stub)
+    console.log(`[Dispute] Raised for ${bookingId}. SLA expires: ${slaExpiresAt}`);
+    await NotificationService.sendPush(booking.customer_id, 'Dispute Raised', 'Our team will review your dispute within 4 hours.');
 
     return dispute;
   }
 
   /**
    * Resolves a dispute with an admin decision.
+   * Leverages 5-branch resolution engine.
    */
-  static async resolveDispute(disputeId, decision, refundAmount = 0) {
+  static async resolveDispute(disputeId, outcome, adminNotes, partialRefundAmount = 0) {
     const { data: dispute, error: fetchErr } = await supabase
       .from('disputes')
-      .select('*, bookings(status, customer_id, tasker_id)')
+      .select('*, bookings(*)')
       .eq('id', disputeId)
       .single();
 
     if (fetchErr || !dispute) throw new Error('Dispute not found');
 
-    // Apply Decision logic
-    const { error: updateErr } = await supabase
+    const bookingId = dispute.booking_id;
+    const taskerId = dispute.bookings.tasker_id;
+    let strikeApplied = false;
+
+    console.log(`[Dispute] Resolving ${disputeId} with outcome: ${outcome}`);
+
+    // 1. Process Financial & Status Logic
+    const { PayoutService } = await import('./payout.service.js');
+    const { BookingService } = await import('./booking.service.js');
+
+    switch (outcome) {
+        case 'FULL_REFUND':
+            // 100% Refund to customer
+            const totalToRefund = dispute.bookings.quoted_price || 0;
+            await RefundService.processRefund(bookingId, totalToRefund, `Dispute Resolved: FULL_REFUND`);
+            await BookingService.transitionStatus(bookingId, 'refunded');
+            strikeApplied = true;
+            break;
+
+        case 'PARTIAL_REFUND':
+            // Split based on admin input
+            if (partialRefundAmount > 0) {
+                await RefundService.processRefund(bookingId, partialRefundAmount, `Dispute Resolved: PARTIAL_REFUND`);
+            }
+            // Release remaining to Tasker
+            const remaining = (dispute.bookings.quoted_price || 0) - partialRefundAmount;
+            if (remaining > 0) {
+                await PayoutService.initiatePayout(bookingId, remaining, 'labor', 'Partial Dispute Settlement');
+            }
+            await BookingService.transitionStatus(bookingId, 'resolved');
+            break;
+
+        case 'FULL_RELEASE':
+            // Admin favors Tasker - release everything
+            await PayoutService.releaseFinalPayout(bookingId);
+            await BookingService.transitionStatus(bookingId, 'paid');
+            break;
+
+        case 'RELEASE_WITH_STRIKE':
+            // Tasker gets paid but also warned
+            await PayoutService.releaseFinalPayout(bookingId);
+            await BookingService.transitionStatus(bookingId, 'paid');
+            strikeApplied = true;
+            break;
+
+        case 'REWORK_ASSIGNED':
+            // Send back to Tasker to fix
+            await BookingService.transitionStatus(bookingId, 'assigned');
+            break;
+
+        case 'REASSIGN_FREE':
+            // Happiness Guarantee: Platform pays for a second Tasker
+            await BookingService.transitionStatus(bookingId, 'refunded'); // Refund original (internal accounting)
+            
+            // Create Clone Booking with is_rework = true
+            const { data: reworkBk, error: reworkErr } = await supabase
+                .from('bookings')
+                .insert({
+                    customer_id: dispute.bookings.customer_id,
+                    category_id: dispute.bookings.category_id,
+                    service_id: dispute.bookings.service_id,
+                    type: dispute.bookings.type,
+                    status: 'requested',
+                    description: `[REWORK] ${dispute.bookings.description}`,
+                    location_address: dispute.bookings.location_address,
+                    location_coords: dispute.bookings.location_coords,
+                    scheduled_at: new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+                    assessment_fee_ghs: 0, // Free for customer
+                    is_rework: true
+                })
+                .select()
+                .single();
+
+            if (!reworkErr) {
+                console.log(`[Guarantee] Rework booking created: ${reworkBk.id}`);
+            }
+            break;
+
+        default:
+            throw new Error(`Invalid resolution outcome: ${outcome}`);
+    }
+
+    // 2. Handle Tasker Strike System
+    if (strikeApplied && taskerId) {
+        // Increment strikes
+        const { data: profile } = await supabase
+            .from('tasker_profiles')
+            .select('strikes')
+            .eq('id', taskerId)
+            .single();
+        
+        const newStrikes = (profile?.strikes || 0) + 1;
+        
+        const updateData = { strikes: newStrikes };
+        
+        // Automated deactivation threshold (3 strikes)
+        if (newStrikes >= 3) {
+            updateData.is_verified = false;
+            updateData.is_available = false;
+            console.warn(`[Dispute] Tasker ${taskerId} DEACTIVATED due to 3 strikes.`);
+        }
+
+        await supabase.from('tasker_profiles').update(updateData).eq('id', taskerId);
+    }
+
+    // 3. Update Dispute Record
+    await supabase
       .from('disputes')
       .update({
         status: 'resolved',
-        admin_decision: decision,
+        outcome,
+        admin_notes: adminNotes,
+        strike_applied: strikeApplied,
         resolved_at: new Date().toISOString()
       })
       .eq('id', disputeId);
 
-    if (updateErr) throw new Error('Failed to update dispute status');
-
-    // If decision is a refund, trigger refund logic
-    if (decision === 'refund_customer' && refundAmount > 0) {
-        // PaymentService.triggerRefund(dispute.booking_id, refundAmount);
-        await supabase.from('bookings').update({ status: 'refunded' }).eq('id', dispute.booking_id);
-    } else {
-        await supabase.from('bookings').update({ status: 'completed' }).eq('id', dispute.booking_id);
+    // 4. Notify Parties
+    await NotificationService.sendPush(dispute.bookings.customer_id, 'Dispute Resolved', `Action taken: ${outcome.replace('_', ' ')}`);
+    if (taskerId) {
+        await NotificationService.sendPush(taskerId, 'Dispute Resolved', strikeApplied ? 'Warning: You have received a strike.' : 'The dispute has been settled.');
     }
 
-    return { message: 'Dispute resolved successfully', decision };
+    return { message: 'Dispute closed successfully', outcome, strikeApplied };
+  }
+
+  /**
+   * Fast-track for Tasker No-Show.
+   * 100% Refund + Tasker Strike + Status Update.
+   */
+  static async reportNoShow(bookingId, userId) {
+    const { data: booking, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', bookingId)
+      .single();
+
+    if (error || !booking) throw new Error('Booking not found');
+    if (booking.customer_id !== userId) throw new Error('Unauthorized');
+
+    console.log(`[Guarantee] No-Show reported for Booking ${bookingId}`);
+
+    // auto-resolve as NO_SHOW dispute
+    const { data: dispute } = await supabase.from('disputes').insert({
+        booking_id: bookingId,
+        raised_by: userId,
+        category: 'NO_SHOW',
+        reason: 'Tasker did not show up for the scheduled time.',
+        status: 'resolved',
+        outcome: 'FULL_REFUND',
+        admin_notes: 'System Auto-Resolved: Customer reported No-Show',
+        resolved_at: new Date().toISOString()
+    }).select().single();
+
+    // Trigger Resolution Logic (Full Refund + Strike)
+    return await this.resolveDispute(dispute.id, 'FULL_REFUND', 'System Auto-Resolved: No-Show');
   }
 }

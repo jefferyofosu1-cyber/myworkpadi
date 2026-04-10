@@ -13,7 +13,8 @@ DO $$ BEGIN
         CREATE TYPE public.booking_status AS ENUM (
             'requested', 'assessment', 'quoted', 'deposit_paid', 
             'assigned', 'arrived', 'in_progress', 'completed', 
-            'confirmed', 'disputed', 'resolved', 'refunded'
+            'confirmed', 'disputed', 'resolved', 'refunded', 'paid',
+            'matching_failed'
         );
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'booking_type') THEN
@@ -21,6 +22,21 @@ DO $$ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_status') THEN
         CREATE TYPE public.payment_status AS ENUM ('pending', 'held_in_escrow', 'released', 'refunded');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dispute_status') THEN
+        CREATE TYPE public.dispute_status AS ENUM ('open', 'investigating', 'resolved');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'resolution_outcome') THEN
+        CREATE TYPE public.resolution_outcome AS ENUM (
+            'FULL_REFUND', 'PARTIAL_REFUND', 'FULL_RELEASE', 
+            'RELEASE_WITH_STRIKE', 'REWORK_ASSIGNED', 'REASSIGN_FREE'
+        );
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dispute_category') THEN
+        CREATE TYPE public.dispute_category AS ENUM ('QUALITY', 'NO_SHOW', 'MATERIALS', 'SAFETY');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tasker_onboarding_status') THEN
+        CREATE TYPE public.tasker_onboarding_status AS ENUM ('pending', 'in_review', 'active');
     END IF;
 END $$;
 
@@ -54,6 +70,9 @@ CREATE TABLE IF NOT EXISTS public.tasker_profiles (
   working_hours JSONB DEFAULT '{}',
   is_available BOOLEAN DEFAULT TRUE,
   service_radius_meters INT DEFAULT 10000,
+  strikes INT DEFAULT 0, -- Automated deactivation at 3
+  onboarding_status public.tasker_onboarding_status DEFAULT 'pending',
+  agreed_to_terms_at TIMESTAMP WITH TIME ZONE,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -83,8 +102,22 @@ CREATE TABLE IF NOT EXISTS public.bookings (
   quoted_price DECIMAL(10,2),
   assessment_fee_ghs DECIMAL(10,2) DEFAULT 100.00,
   materials_receipt_url TEXT, -- Photo proof to unblock job start
+  matching_rounds INT DEFAULT 0, -- Process 4 tracking
+  is_manual_selection BOOLEAN DEFAULT FALSE, -- Premium direct request
+  is_rework BOOLEAN DEFAULT FALSE, -- Platform-paid guarantee job
+  cancellation_reason TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Escrow Ledger (Process 3 - Audit Trail)
+CREATE TABLE IF NOT EXISTS public.escrow_ledger (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  booking_id UUID REFERENCES public.bookings(id) ON DELETE CASCADE,
+  amount_ghs DECIMAL(10,2) NOT NULL,
+  e_type TEXT CHECK (e_type IN ('held', 'released', 'refunded')),
+  note TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- Quotes (For Assessment Flow breakdown)
@@ -127,21 +160,27 @@ CREATE TABLE IF NOT EXISTS public.disputes (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   booking_id UUID REFERENCES public.bookings(id) ON DELETE CASCADE,
   raised_by UUID REFERENCES public.profiles(id),
+  category public.dispute_category NOT NULL,
   reason TEXT NOT NULL,
   evidence_urls TEXT[], 
-  status TEXT DEFAULT 'open', 
-  admin_decision TEXT,
+  status public.dispute_status DEFAULT 'open', 
+  outcome public.resolution_outcome,
+  admin_notes TEXT,
+  strike_applied BOOLEAN DEFAULT FALSE,
+  sla_expires_at TIMESTAMP WITH TIME ZONE,
   resolved_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 4. RPCs
 
--- High-Performance Geo-Matching
+-- High-Performance Geo-Matching (Professional Grace Version)
 CREATE OR REPLACE FUNCTION public.find_nearby_taskers(
   cust_lat FLOAT, 
   cust_lng FLOAT, 
-  req_category_id UUID
+  req_category_id UUID,
+  req_scheduled_at TIMESTAMP WITH TIME ZONE,
+  max_radius_meters FLOAT DEFAULT 10000
 )
 RETURNS TABLE (
   tasker_id UUID,
@@ -167,15 +206,25 @@ BEGIN
   FROM public.tasker_profiles tp
   JOIN public.profiles p ON p.id = tp.id
   WHERE 
-    -- Check if Tasker offers this service
+    -- 1. Skill check
     req_category_id = ANY(tp.skills) 
     AND tp.is_verified = TRUE
     AND tp.is_available = TRUE
-    -- Check if within Tasker's specific service radius
+    
+    -- 2. Proximity check (Uses smaller of max_radius or tasker's own radius)
     AND ST_DWithin(
       p.location_coords,
       ST_SetSRID(ST_MakePoint(cust_lng, cust_lat), 4326)::extensions.geography,
-      tp.service_radius_meters
+      LEAST(max_radius_meters, tp.service_radius_meters)
+    )
+
+    -- 3. Availability check: No overlapping bookings (+/- 3 hours)
+    AND NOT EXISTS (
+       SELECT 1 FROM public.bookings b 
+       WHERE b.tasker_id = tp.id 
+       AND b.status IN ('assigned', 'arrived', 'in_progress')
+       AND b.scheduled_at > (req_scheduled_at - INTERVAL '3 hours')
+       AND b.scheduled_at < (req_scheduled_at + INTERVAL '3 hours')
     )
   ORDER BY 3 DESC, 5 ASC; 
 END;

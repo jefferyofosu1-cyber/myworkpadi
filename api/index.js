@@ -33,6 +33,7 @@ import paymentsRoutes from '../server/routes/payments.routes.js';
 import adminRoutes from '../server/routes/admin.routes.js';
 import disputesRoutes from '../server/routes/disputes.routes.js';
 import profileRoutes from '../server/routes/profile.routes.js';
+import matchingRoutes from '../server/routes/matching.routes.js';
 import quotesRoutes from '../server/routes/quotes.routes.js';
 import reviewsRoutes from '../server/routes/reviews.routes.js';
 
@@ -42,6 +43,7 @@ app.use('/api/bookings', bookingsRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/disputes', disputesRoutes);
+app.use('/api/matching', matchingRoutes);
 app.use('/api/profiles', profileRoutes);
 app.use('/api/quotes', quotesRoutes);
 app.use('/api/reviews', reviewsRoutes);

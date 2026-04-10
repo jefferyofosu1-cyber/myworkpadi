@@ -6,11 +6,16 @@ export class AdminService {
    */
   static async vetTasker(taskerId, status) {
     const isVerified = status === 'approved';
+    const onboardingStatus = isVerified ? 'active' : 'pending';
     
-    // 1. Update verification status in tasker_profiles
+    // 1. Update verification status and onboarding lifecycle in tasker_profiles
     const { data: profile, error: profileErr } = await supabase
       .from('tasker_profiles')
-      .update({ is_verified: isVerified })
+      .update({ 
+          is_verified: isVerified,
+          onboarding_status: onboardingStatus,
+          is_available: isVerified // Only make available if verified
+      })
       .eq('id', taskerId)
       .select()
       .single();

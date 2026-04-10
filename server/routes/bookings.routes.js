@@ -38,17 +38,63 @@ router.patch('/:id/status', async (req, res) => {
 });
 
 /**
- * @desc Get user's active bookings (Customer or Tasker view)
- * @route GET /api/bookings/active
+ * @desc Cancel a booking (Triggers Refund Policy)
+ * @route POST /api/bookings/:id/cancel
  */
-router.get('/active', async (req, res) => {
-  // Logic to fetch from DB via service or direct Supabase if simple
-  res.json({
-    bookings: [
-      { id: 'b-001', type: 'assessment', status: 'pending', task: 'Plumbing Repair' },
-      { id: 'b-002', type: 'fixed', status: 'accepted', task: 'Mount TV' }
-    ]
-  });
+router.post('/:id/cancel', async (req, res) => {
+    const { reason } = req.body;
+    try {
+        const result = await BookingService.cancelBooking(req.params.id, reason);
+        res.json({ message: 'Booking cancelled successfully', ...result });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+/**
+ * @desc Reschedule a booking (Triggers new Matching cycle)
+ * @route PATCH /api/bookings/:id/reschedule
+ */
+/**
+ * @desc Raise a dispute for a booking
+ * @route POST /api/bookings/:id/dispute
+ */
+router.post('/:id/dispute', async (req, res) => {
+    const { reason, evidence_urls } = req.body;
+    // In production, user_id comes from auth middleware
+    const user_id = req.headers['x-user-id'] || 'fake-user-id'; 
+    try {
+        const { DisputeService } = await import('../services/dispute.service.js');
+        const dispute = await DisputeService.raiseDispute(req.params.id, user_id, reason, evidence_urls);
+        res.status(201).json({ message: 'Dispute raised successfully', dispute });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+/**
+ * @desc Report a Tasker No-Show (Happiness Guarantee Trigger)
+ * @route POST /api/bookings/:id/report-no-show
+ */
+router.post('/:id/report-no-show', async (req, res) => {
+    const user_id = req.headers['x-user-id'] || 'fake-user-id';
+    try {
+        const { DisputeService } = await import('../services/dispute.service.js');
+        const result = await DisputeService.reportNoShow(req.params.id, user_id);
+        res.json({ message: 'No-show reported. Refund processed and Tasker penalized.', ...result });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+router.patch('/:id/reschedule', async (req, res) => {
+    const { scheduled_at } = req.body;
+    try {
+        const result = await BookingService.rescheduleBooking(req.params.id, scheduled_at);
+        res.json({ message: 'Booking rescheduled successfully', ...result });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
 });
 
 export default router;

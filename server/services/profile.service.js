@@ -59,4 +59,45 @@ export class ProfileService {
     if (error) throw new Error(`Identity card link failed: ${error.message}`);
     return data;
   }
+
+  /**
+   * Updates tasker skill categories.
+   */
+  static async updateTaskerSkills(userId, skillIds) {
+    const { data, error } = await supabase
+      .from('tasker_profiles')
+      .update({
+        skills: skillIds,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Skill update failed: ${error.message}`);
+    return data;
+  }
+
+  /**
+   * Finalizes onboarding and submits for admin vetting.
+   */
+  static async submitForVetting(userId) {
+    const { data, error } = await supabase
+      .from('tasker_profiles')
+      .update({
+        onboarding_status: 'in_review',
+        agreed_to_terms_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Onboarding submission failed: ${error.message}`);
+    
+    // Logic to notify admin could go here
+    console.log(`[Admin Notification] Tasker ${userId} is ready for vetting.`);
+    
+    return data;
+  }
 }

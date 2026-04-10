@@ -39,6 +39,16 @@ router.post('/release-payout', async (req, res) => {
   try {
     const result = await AdminService.triggerPayout(bookingId);
     res.json(result);
+/**
+ * @desc Resolve a dispute
+ * @route PATCH /api/admin/disputes/:id/resolve
+ */
+router.patch('/disputes/:id/resolve', async (req, res) => {
+  const { outcome, adminNotes, partialRefundAmount } = req.body;
+  try {
+    const { DisputeService } = await import('../services/dispute.service.js');
+    const result = await DisputeService.resolveDispute(req.params.id, outcome, adminNotes, partialRefundAmount);
+    res.json(result);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

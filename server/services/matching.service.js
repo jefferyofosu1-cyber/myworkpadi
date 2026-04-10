@@ -26,12 +26,14 @@ export class MatchingService {
    * High-Performance Geo-Matching via PostGIS RPC.
    * Replaces manual Haversine math for professional-grade performance.
    */
-  static async findNearbyTaskers(lat, lng, categoryId) {
+  static async findNearbyTaskers(lat, lng, categoryId, scheduledAt, maxRadius = 10000) {
     const { data: nearby, error } = await supabase
       .rpc('find_nearby_taskers', {
         cust_lat: lat,
         cust_lng: lng,
-        category_id: categoryId
+        req_category_id: categoryId,
+        req_scheduled_at: scheduledAt,
+        max_radius_meters: maxRadius
       });
 
     if (error) throw new Error(`Geo-Matching RPC Error: ${error.message}`);
@@ -73,11 +75,26 @@ export class MatchingService {
   /**
    * Initiates the Broadcast logic to the top 3 matches.
    */
-  static async broadcastJob(bookingId, customerLat, customerLng, categoryId) {
+  static async broadcastJob(bookingId, customerLat, customerLng, categoryId, maxRadius = 10000) {
     try {
       console.log(`[Matching] Booting sequence for Booking: ${bookingId}...`);
       
-      const nearby = await this.findNearbyTaskers(customerLat, customerLng, categoryId);
+      // 1. Fetch Booking for context (availability & rounds)
+      const { data: booking, error: fetchErr } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', bookingId)
+        .single();
+        
+      if (fetchErr || !booking) throw new Error('Booking not found');
+
+      const nearby = await this.findNearbyTaskers(
+          customerLat, 
+          customerLng, 
+          categoryId, 
+          booking.scheduled_at, 
+          maxRadius
+      );
       if (nearby.length === 0) {
          console.warn(`[Matching] No taskers found within reach for booking ${bookingId}`);
          // Optionally, alert admin or refund customer via fallback mechanism.
@@ -87,25 +104,38 @@ export class MatchingService {
       const ranked = this.scoreTaskers(nearby);
       const top3 = ranked.slice(0, 3);
       
-      const targetUserIds = top3.map(t => t.tasker_id);
-      
-      // Fetch full booking details for the notification context
-      const { data: booking } = await supabase
+      // Increment Matching Rounds (Process 4 / Step 2 of Refund Policy)
+      const { data: updatedBk, error: roundErr } = await supabase
         .from('bookings')
-        .select('*, categories(name)')
+        .update({ matching_rounds: (booking.matching_rounds || 0) + 1 })
         .eq('id', bookingId)
+        .select('matching_rounds')
         .single();
 
-      const phones = top3.map(t => t.phone).filter(Boolean);
+      if (updatedBk && updatedBk.matching_rounds >= 3) {
+          console.log(`[Matching] Booking ${bookingId} failed after 3 rounds. Updating status.`);
+          const { BookingService } = await import('./booking.service.js');
+          await BookingService.transitionStatus(bookingId, 'matching_failed');
+          return false;
+      }
+
+      const targetUserIds = top3.map(t => t.tasker_id);
       
-      console.log(`[Matching] Targetting Top ${top3.length} Taskers with SMS:`, phones);
+      console.log(`[Matching] Targeting Top ${top3.length} Taskers with Unified Alerts:`, targetUserIds);
       
       // Store targeted IDs for validation - 5 Minute Window (300s)
       await redis.set(`job_offers:${bookingId}`, JSON.stringify(targetUserIds), 'EX', 300);
-
-      // Trigger real SMS alerts
-      if (phones.length > 0) {
-        await NotificationService.broadcastJobAlert(phones, booking);
+ 
+      // Trigger Unified alerts (Push -> WhatsApp -> SMS)
+      for (const userId of targetUserIds) {
+          await NotificationService.sendUnified(userId, {
+              title: 'New Job Alert!',
+              body: `[TaskGH] New Job Alert! Location: ${booking.location_address}. You have 5 minutes to accept.`,
+              whatsappTemplate: 'new_job_broadcast',
+              whatsappComponents: [
+                  { type: 'body', parameters: [{ type: 'text', text: booking.location_address }] }
+              ]
+          });
       }
       
       return top3;
@@ -113,6 +143,65 @@ export class MatchingService {
        console.error('[Matching Error]:', err);
        return false;
     }
+  }
+  
+  /**
+   * Sends a targeted offer to a manually selected Tasker.
+   * Exclusive 10-Minute Response Window.
+   */
+  static async sendDirectOffer(bookingId, taskerId) {
+    console.log(`[Matching] Sending Direct Offer for Booking ${bookingId} to Tasker ${taskerId}`);
+    
+    // 1. Fetch Tasker phone & booking details
+    const { data: booking } = await supabase
+      .from('bookings')
+      .select('*, profiles!bookings_tasker_id_fkey(phone_number)')
+      .eq('id', bookingId)
+      .single();
+
+    if (!booking) throw new Error('Booking not found');
+
+    const taskerPhone = booking.profiles?.phone_number;
+
+    // 2. Set exclusive target in Redis (10 Mins / 600s)
+    await redis.set(`job_offers:${bookingId}`, JSON.stringify([taskerId]), 'EX', 600);
+    
+    // 3. Notify Tasker
+    const message = `[TaskGH] EXCLUSIVE Direct Job Request! Location: ${booking.location_address}. You have 10 minutes to accept. View: https://myworkpadi.vercel.app/jobs/${bookingId}`;
+    await NotificationService.sendSMS(taskerPhone, message);
+    await NotificationService.sendPush(taskerId, 'Direct Job Request', message);
+
+    return true;
+  }
+
+  /**
+   * Allows a Tasker to explicitly decline a manual request,
+   * triggering immediate fallback to the automated algorithm.
+   */
+  static async declineDirectOffer(bookingId, taskerId) {
+    console.log(`[Matching] Tasker ${taskerId} declined Direct Offer for ${bookingId}. Falling back.`);
+    
+    // 1. Clear exclusive offer
+    await redis.del(`job_offers:${bookingId}`);
+    
+    // 2. Reset Booking to ensure it's eligible for automated matching
+    const { data: updatedBk } = await supabase
+      .from('bookings')
+      .update({ 
+          tasker_id: null, 
+          is_manual_selection: false 
+      })
+      .eq('id', bookingId)
+      .select()
+      .single();
+
+    // 3. Trigger General Algorithm
+    return await this.broadcastJob(
+        updatedBk.id, 
+        updatedBk.location_lat, 
+        updatedBk.location_lng, 
+        updatedBk.category_id
+    );
   }
 
   /**
@@ -139,9 +228,8 @@ export class MatchingService {
         assigned_at: new Date().toISOString()
       })
       .eq('id', bookingId)
-      // Status must be either 'pending' (if fixed) or 'broadcasted' depends on flow
-      // To be safe, we check if tasker_id is null
-      .is('tasker_id', null) 
+      // Check for null tasker_id OR if it's the specific tasker for a direct offer
+      .or(`tasker_id.is.null,tasker_id.eq.${taskerId}`)
       .select()
       .single();
 

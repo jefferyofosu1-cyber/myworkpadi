@@ -1,76 +1,122 @@
+import { supabase } from '../config/supabase.js';
+import { messaging } from '../config/firebase.js';
 import axios from 'axios';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
+const FLASHSMS_API_KEY = process.env.FLASHSMS_API_KEY;
+const FLASHSMS_SENDER_ID = process.env.FLASHSMS_SENDER_ID || 'TaskGH';
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
+const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID;
+
 export class NotificationService {
-  static TERMII_URL = 'https://api.ng.termii.com/api/sms/send';
-  static API_KEY = process.env.TERMII_API_KEY;
-  static SENDER_ID = process.env.TERMII_SENDER_ID || 'TaskGH';
+  /**
+   * Sends a high-delivery SMS via Flash SMS Africa. (Process 6 - Flash SMS)
+   */
+  static async sendSMS(phoneNumber, message) {
+    if (!FLASHSMS_API_KEY) {
+        console.log(`[FlashSMS Mock] To: ${phoneNumber}, Msg: ${message}`);
+        return { message: 'Mock sent' };
+    }
+
+    try {
+        const response = await axios.post('https://app.flashsms.africa/api/v1/sms/send', {
+            recipients: [phoneNumber],
+            senderId: FLASHSMS_SENDER_ID,
+            message: message,
+            isFlash: true // Ensures Class 0 delivery for OTPs
+        }, {
+            headers: { 'Authorization': `Bearer ${FLASHSMS_API_KEY}` }
+        });
+        return response.data;
+    } catch (err) {
+        console.error('[FlashSMS Error]', err.response?.data || err.message);
+        throw err;
+    }
+  }
 
   /**
-   * General SMS sender using Termii
+   * Sends a rich update via WhatsApp Business API. (Process 6 - WhatsApp)
    */
-  static async sendSMS(to, message) {
-    if (!this.API_KEY) {
-      console.warn('[Notification] TERMII_API_KEY missing. Skipping SMS.');
+  static async sendWhatsApp(phoneNumber, templateName, components = []) {
+    if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_ID) {
+        console.log(`[WhatsApp Mock] To: ${phoneNumber}, Template: ${templateName}`);
+        return { message: 'Mock sent' };
+    }
+
+    try {
+        const response = await axios.post(`https://graph.facebook.com/v17.0/${WHATSAPP_PHONE_ID}/messages`, {
+            messaging_product: 'whatsapp',
+            to: phoneNumber,
+            type: 'template',
+            template: {
+                name: templateName,
+                language: { code: 'en_US' },
+                components: components
+            }
+        }, {
+            headers: { 'Authorization': `Bearer ${WHATSAPP_TOKEN}` }
+        });
+        return response.data;
+    } catch (err) {
+        console.error('[WhatsApp Error]', err.response?.data || err.message);
+        throw err;
+    }
+  }
+
+  /**
+   * Sends an in-app push notification via Firebase FCM. (Process 6 - Firebase FCM)
+   */
+  static async sendPush(userId, title, body, data = {}) {
+    // 1. Fetch User FCM Token
+    const { data: user } = await supabase.from('profiles').select('fcm_token').eq('id', userId).single();
+    
+    if (!user?.fcm_token || !messaging) {
+      console.log(`[Push Mock] User: ${userId}, Title: ${title}, Body: ${body}`);
       return;
     }
 
     try {
-      // Basic number formatting (ensuring it has 233 etc)
-      let formattedTo = to;
-      if (to.startsWith('0')) {
-        formattedTo = '233' + to.substring(1);
-      }
-
-      const payload = {
-        to: formattedTo,
-        from: this.SENDER_ID,
-        sms: message,
-        type: 'plain',
-        channel: 'generic',
-        api_key: this.API_KEY,
-      };
-
-      const response = await axios.post(this.TERMII_URL, payload);
-      console.log(`[Notification] SMS sent to ${formattedTo}. Response:`, response.data);
-      return response.data;
+      await messaging.send({
+        token: user.fcm_token,
+        notification: { title, body },
+        data: data
+      });
+      console.log(`[Push Success] User: ${userId}`);
     } catch (err) {
-      console.error('[Notification Error]:', err.response?.data || err.message);
+      console.error('[FCM Error]', err.message);
     }
   }
 
   /**
-   * Templates and Channel Management (Process 6)
+   * Intelligent Multi-Channel delivery with fallbacks.
    */
-  static async notifyBookingUpdate(userId, type, data) {
-    const templates = {
-      'booking_confirmed': `Your booking for ${data.serviceName} is confirmed! Tasker ${data.taskerName} is assigned.`,
-      'escrow_held': `Payment of GHS ${data.amount} for Job #${data.bookingId} is now held in escrow. Work can begin.`,
-      'job_arrived': `Tasker ${data.taskerName} has arrived at your location.`,
-      'job_completed': `Tasker has marked your job as completed. Please confirm to release funds.`,
-      'dispute_raised': `A dispute has been raised for Job #${data.bookingId}. Our team will review it within 24h.`,
-    };
+  static async sendUnified(userId, payload) {
+    const { data: profile } = await supabase.from('profiles').select('phone_number, fcm_token').eq('id', userId).single();
+    if (!profile) return;
 
-    const message = templates[type];
-    if (!message) return;
+    // 1. Priority: Push (If user active)
+    if (profile.fcm_token) {
+        await this.sendPush(userId, payload.title, payload.body, payload.data);
+    }
 
-    // Send via multiple channels based on user preferences (Stubbed)
-    await this.sendSMS(data.phone, message);
-    
-    // Future: Add WhatsApp and Push triggers here
-    // await this.sendWhatsApp(data.phone, message);
-    // await this.sendPush(userId, message);
+    // 2. Priority: WhatsApp (Preferred for Rich Data)
+    try {
+        if (payload.whatsappTemplate) {
+            await this.sendWhatsApp(profile.phone_number, payload.whatsappTemplate, payload.whatsappComponents);
+        }
+    } catch (err) {
+        // 3. Absolute Fallback: SMS
+        console.warn("[Unified] WhatsApp failed, falling back to SMS.");
+        await this.sendSMS(profile.phone_number, payload.body);
+    }
   }
 
   /**
-   * Broadcasts a new job alert to a set of matched taskers
+   * Specific Alerts
    */
-  static async broadcastJobAlert(phoneNumbers, booking) {
-    const message = `[TaskGH] New Job Alert! Location: ${booking.location_address}. Task: ${booking.categories?.name}. View: https://myworkpadi.vercel.app/jobs/${booking.id}`;
-    
-    const smsPromises = phoneNumbers.map(to => this.sendSMS(to, message));
-    return Promise.allSettled(smsPromises);
+  static async notifySafetyIncident(phoneNumber, bookingId) {
+      return await this.sendSMS(phoneNumber, `CRITICAL SAFETY INCIDENT: Booking ${bookingId}. Investigate immediately.`);
   }
 }

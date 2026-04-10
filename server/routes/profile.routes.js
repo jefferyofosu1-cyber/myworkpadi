@@ -55,4 +55,33 @@ router.post('/identity-cards', async (req, res) => {
   }
 });
 
+/**
+ * @desc Update Tasker Skills
+ * @route PATCH /api/profiles/skills
+ */
+router.patch('/skills', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  const { skillIds } = req.body;
+  try {
+    const profile = await ProfileService.updateTaskerSkills(userId, skillIds);
+    res.json({ message: 'Skills updated', profile });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * @desc Submit for Admin Vetting
+ * @route POST /api/profiles/submit-vetting
+ */
+router.post('/submit-vetting', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  try {
+    const profile = await ProfileService.submitForVetting(userId);
+    res.json({ message: 'Submitted for vetting', profile });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 export default router;

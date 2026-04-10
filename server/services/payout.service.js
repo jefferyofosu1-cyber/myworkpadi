@@ -1,11 +1,12 @@
 import { supabase } from '../config/supabase.js';
+import { BookingService } from './booking.service.js';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
-const COMMISSION_PERCENT = 0.20; // 20% platform fee on labor
+const COMMISSION_PERCENT = 0.12; // 12% platform fee on labor (Refined)
 
 export class PayoutService {
   /**
@@ -128,6 +129,10 @@ export class PayoutService {
        }
     }
 
-    return await this.initiatePayout(bookingId, payoutAmount, 'labor', 'Final Completion Release');
+    const result = await this.initiatePayout(bookingId, payoutAmount, 'labor', 'Final Completion Release');
+    if (result.success) {
+        await BookingService.transitionStatus(bookingId, 'paid').catch(e => console.error("Final Status Error:", e));
+    }
+    return result;
   }
 }
