@@ -1,5 +1,5 @@
-import { supabase } from '../config/supabase.js';
 import { MatchingService } from './matching.service.js';
+import { PayoutService } from './payout.service.js';
 
 export class BookingService {
   /**
@@ -24,13 +24,13 @@ export class BookingService {
         customer_id,
         category_id,
         b_type,
-        status: 'pending',
+        status: 'requested', // Status from Process 2
         location_address,
         location_lat,
         location_lng,
         problem_description,
         scheduled_at,
-        assessment_fee_ghs: category.assessment_fee_ghs,
+        assessment_fee_ghs: 100.00, // Hardcoded as per Process 2 request
       })
       .select()
       .single();
@@ -90,10 +90,15 @@ export class BookingService {
 
     if (updateErr) throw new Error(`Status update failed: ${updateErr.message}`);
     
-    // Process 2 Final Step: If customer confirms completion, trigger final payout
+    // Process 3 Payout Triggers (Financial Release)
+    if (targetStatus === 'in_progress') {
+        // Released by: Customer confirms start
+        PayoutService.releaseAssessmentFee(bookingId).catch(e => console.error("Assessment Payout Error:", e));
+    }
+    
     if (targetStatus === 'confirmed') {
-        // PayoutService.releaseFinalPayment(bookingId) // Stub for Process 3 logic
-        console.log(`[Flow] Job ${bookingId} confirmed. Full funds ready for release.`);
+        // Released by: Customer confirms job done
+        PayoutService.releaseFinalPayout(bookingId).catch(e => console.error("Final Payout Error:", e));
     }
 
     // Process 4 Trigger: Broadcast if job is ready for matching

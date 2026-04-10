@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase.js';
 import { BookingService } from './booking.service.js';
+import { PayoutService } from './payout.service.js';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 
@@ -136,14 +137,13 @@ export class PaymentService {
           .single();
 
         if (quote) {
-          // Release Materials immediately (Process 2 Step 6)
-          await supabase.from('escrow_ledger').insert({
-            booking_id: bookingId,
-            amount_ghs: quote.materials_cost,
-            e_type: 'released', // This marks it as paid out
-            note: 'Immediate materials release upon deposit'
-          });
-          console.log(`[Flow] Released GHS ${quote.materials_cost} materials to Tasker.`);
+          // Release Materials immediately (Process 2 Step 6) - 100% pass-through
+          PayoutService.initiatePayout(
+            bookingId, 
+            quote.materials_cost, 
+            'materials', 
+            'Immediate materials release upon deposit approved'
+          ).catch(e => console.error("Materials Payout Error:", e));
         }
 
         await BookingService.transitionStatus(bookingId, 'deposit_paid');
