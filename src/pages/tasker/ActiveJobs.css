@@ -1,0 +1,49 @@
+.status-pipeline {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: var(--bg);
+  padding: 16px 24px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.pipeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  width: 120px;
+  text-align: center;
+}
+
+.pipeline-step.active {
+  color: var(--primary);
+}
+
+.pipeline-step .step-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pipeline-step.active .step-icon {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.pipeline-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  margin: 0 16px;
+  margin-top: -24px;
+}

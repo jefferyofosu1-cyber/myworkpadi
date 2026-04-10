@@ -1,0 +1,220 @@
+.momo-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(13, 17, 23, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.momo-modal-card {
+  background: var(--white);
+  width: 100%;
+  max-width: 440px;
+  border-radius: 32px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  animation: slideUpFade 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.momo-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--off-white);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-mist);
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.momo-close-btn:hover:not(:disabled) {
+  background: var(--border);
+  color: var(--black);
+}
+
+.momo-modal-body {
+  padding: 48px 40px;
+}
+
+.momo-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.momo-header h3 {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: var(--black);
+  letter-spacing: -0.02em;
+}
+
+.momo-header p {
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.momo-amount {
+  background: var(--off-white);
+  border: 1px solid var(--border);
+  padding: 32px;
+  border-radius: 20px;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 40px;
+  color: var(--black);
+}
+
+.momo-form-group {
+  margin-bottom: 32px;
+}
+
+.momo-form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--black);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.provider-btn {
+  padding: 14px 8px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.provider-btn.active {
+  border-color: var(--green);
+  background: var(--green-pale);
+  color: var(--green);
+}
+
+.momo-form-group input {
+  width: 100%;
+  padding: 18px 24px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  border-radius: 14px;
+  font-size: 18px;
+  color: var(--black);
+  font-weight: 700;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.momo-form-group input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px var(--green-pale);
+}
+
+.momo-pay-btn {
+  width: 100%;
+  padding: 20px;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(10, 110, 74, 0.2);
+}
+
+.momo-pay-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 40px rgba(10, 110, 74, 0.3);
+}
+
+.momo-pay-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.momo-footer {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.secure-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-mist);
+  font-weight: 600;
+}
+
+.text-center { text-align: center; }
+.text-primary { color: var(--green); }
+.text-green { color: var(--green); }
+
+.momo-spinner {
+  margin: 0 auto 32px auto;
+  animation: spin 1s linear infinite;
+  color: var(--green);
+}
+
+.momo-status-title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  color: var(--black);
+  letter-spacing: -0.02em;
+}
+
+.momo-status-desc {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.success-icon-wrapper {
+  margin-bottom: 32px;
+  display: flex;
+  justify-content: center;
+}
