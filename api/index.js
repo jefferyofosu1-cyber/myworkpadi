@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 // Root route
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
   res.json({ 
     message: 'Welcome to TaskGH API', 
     version: '1.0.0',
@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
 });
 
 // Basic health check route
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.json({ status: 'active', message: 'TaskGH API is running' });
 });
 
