@@ -1,11 +1,44 @@
-import React from 'react';
-import { TrendingUp, Clock, CheckCircle2, ArrowRight } from 'lucide-react';
+import { TrendingUp, Clock, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
+import { api } from '../../utils/api';
 import './TaskerPages.css';
 
 export default function DashboardOverview() {
+  const [data, setData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userId = localStorage.getItem('taskgh_user_id');
+        const [statsRes, profileRes] = await Promise.all([
+          api.get(`/bookings/stats/${userId}`),
+          api.get(`/profiles/me`)
+        ]);
+        setData({
+          stats: statsRes.data,
+          profile: profileRes.data
+        });
+      } catch (err) {
+        console.error('Dashboard Fetch failed:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) return (
+    <div className="flex-center" style={{height: '400px'}}>
+      <Loader2 className="animate-spin" size={32} />
+    </div>
+  );
+
+  const stats = data?.stats || { totalEarned: 0, pendingEscrow: 0, completedCount: 0 };
+  const profile = data?.profile || { full_name: 'Tasker' };
+
   return (
     <div className="dashboard-overview">
-      <h1 className="page-title">Welcome back, Kwame 👋</h1>
+      <h1 className="page-title">Welcome back, {profile.full_name.split(' ')[0]}</h1>
       <p className="page-subtitle">Here is what is happening with your tasks today.</p>
 
       <div className="stats-grid">
@@ -16,8 +49,8 @@ export default function DashboardOverview() {
             </div>
           </div>
           <h3>Total Earned</h3>
-          <div className="stat-value">GHS 1,250.00</div>
-          <div className="stat-trend positive">+15% from last month</div>
+          <div className="stat-value">GHS {stats.totalEarned.toFixed(2)}</div>
+          <div className="stat-trend positive">Total lifetime earnings</div>
         </div>
 
         <div className="stat-card">
@@ -27,19 +60,19 @@ export default function DashboardOverview() {
             </div>
           </div>
           <h3>Pending Escrow</h3>
-          <div className="stat-value">GHS 450.00</div>
-          <div className="stat-trend neutral">Awaiting 2 job completions</div>
+          <div className="stat-value">GHS {stats.pendingEscrow.toFixed(2)}</div>
+          <div className="stat-trend neutral">Awaiting job completions</div>
         </div>
 
         <div className="stat-card">
           <div className="stat-header">
-            <div className="stat-icon-wrap" style={{background: 'var(--blue)22', color: 'var(--blue)'}}>
+            <div className="stat-icon-wrap" style={{background: 'rgba(52, 152, 219, 0.15)', color: '#3498db'}}>
               <CheckCircle2 size={24} />
             </div>
           </div>
           <h3>Jobs Completed</h3>
-          <div className="stat-value">24</div>
-          <div className="stat-trend positive">5.0 ⭐ average rating</div>
+          <div className="stat-value">{stats.completedCount}</div>
+          <div className="stat-trend positive">Total successful tasks</div>
         </div>
       </div>
 

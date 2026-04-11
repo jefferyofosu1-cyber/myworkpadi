@@ -214,4 +214,63 @@ export class BookingService {
 
       return { success: true, newTime };
   }
+
+  /**
+   * Fetches all jobs available for broadcasting (requested status).
+   */
+  static async getAvailableJobs() {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select(`
+            id, 
+            status, 
+            location_address, 
+            problem_description, 
+            scheduled_at, 
+            assessment_fee_ghs,
+            categories(name)
+        `)
+        .eq('status', 'requested')
+        .is('tasker_id', null)
+        .order('created_at', { ascending: false });
+
+      if (error) throw new Error(`Fetch failed: ${error.message}`);
+      return data;
+  }
+
+  /**
+   * Calculates real-time stats for a tasker dashboard.
+   */
+  static async getTaskerStats(taskerId) {
+      // 1. Total Earned (Jobs in 'paid' state)
+      const { data: earnedData } = await supabase
+          .from('bookings')
+          .select('assessment_fee_ghs, total_quote_ghs')
+          .eq('tasker_id', taskerId)
+          .eq('status', 'paid');
+      
+      const totalEarned = (earnedData || []).reduce((sum, b) => sum + (b.assessment_fee_ghs || 0) + (b.total_quote_ghs || 0), 0);
+
+      // 2. Pending Escrow (Jobs in 'deposit_paid' through 'completed')
+      const { data: escrowData } = await supabase
+          .from('bookings')
+          .select('assessment_fee_ghs, total_quote_ghs')
+          .eq('tasker_id', taskerId)
+          .in('status', ['deposit_paid', 'assigned', 'arrived', 'in_progress', 'completed']);
+      
+      const pendingEscrow = (escrowData || []).reduce((sum, b) => sum + (b.assessment_fee_ghs || 0) + (b.total_quote_ghs || 0), 0);
+
+      // 3. Completed Jobs count
+      const { count: completedCount } = await supabase
+          .from('bookings')
+          .select('*', { count: 'exact', head: true })
+          .eq('tasker_id', taskerId)
+          .in('status', ['confirmed', 'payout_ready', 'paid']);
+
+      return {
+          totalEarned,
+          pendingEscrow,
+          completedCount: completedCount || 0
+      };
+  }
 }

@@ -126,15 +126,12 @@ export class MatchingService {
       // Store targeted IDs for validation - 5 Minute Window (300s)
       await redis.set(`job_offers:${bookingId}`, JSON.stringify(targetUserIds), 'EX', 300);
  
-      // Trigger Unified alerts (Push -> WhatsApp -> SMS)
+      // Trigger Unified alerts (Push -> SMS)
       for (const userId of targetUserIds) {
           await NotificationService.sendUnified(userId, {
               title: 'New Job Alert!',
               body: `[TaskGH] New Job Alert! Location: ${booking.location_address}. You have 5 minutes to accept.`,
-              whatsappTemplate: 'new_job_broadcast',
-              whatsappComponents: [
-                  { type: 'body', parameters: [{ type: 'text', text: booking.location_address }] }
-              ]
+              data: { bookingId: bookingId }
           });
       }
       

@@ -39,6 +39,11 @@ router.post('/release-payout', async (req, res) => {
   try {
     const result = await AdminService.triggerPayout(bookingId);
     res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /**
  * @desc Resolve a dispute
  * @route PATCH /api/admin/disputes/:id/resolve

@@ -23,7 +23,7 @@ export default function BecomeATaskerPage() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
               {["Same-day MoMo Pay", "Total Flexibility", "Verified Jobs"].map(t => (
                 <div key={t} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(0,0,0,0.06)", padding: "10px 20px", borderRadius: 100, border: "1px solid rgba(0,0,0,0.1)" }}>
-                  <div style={{ width: 16, height: 16, borderRadius: '50%', background: G.green, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: G.white }}>✓</div>
+                  <div style={{ width: 16, height: 16, borderRadius: '50%', background: G.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: G.white }}><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
                   <span style={{ fontFamily: FB, fontSize: 14, fontWeight: 700, color: G.black }}>{t}</span>
                 </div>
               ))}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { G, FH, FB } from '../constants/theme';
 import { ALL_SERVICES, CATS } from '../constants/data';
 
@@ -17,11 +18,17 @@ const Tag = ({ color, bg, children }) => (
 export default function ServicesPage() {
   const [cat, setCat] = useState("All");
   const [search, setSearch] = useState("");
+  const navigate = useNavigate();
   
   const filtered = ALL_SERVICES.filter(s =>
     (cat === "All" || s.cat === cat) &&
     (search === "" || s.name.toLowerCase().includes(search.toLowerCase()))
   );
+
+  const handleBook = (svc) => {
+      // Navigate to booking flow and pass service info
+      navigate('/booking', { state: { service: svc } });
+  };
 
   return (
     <div className="page-enter" style={{ paddingTop:80 }}>
@@ -91,7 +98,7 @@ export default function ServicesPage() {
                     <div style={{ fontFamily:FB, fontSize:10, color:G.mist, marginBottom:2, fontWeight: 700 }}>{svc.type==="assessment"?"ASSESSMENT":"FIXED PRICE"}</div>
                     <div style={{ fontFamily:FH, fontWeight:800, fontSize:22, color:G.green }}>{svc.price}</div>
                   </div>
-                  <button className="btn-primary" style={{ width:"auto", padding:"12px 24px", fontSize:14, borderRadius:12 }}>Book</button>
+                  <button className="btn-primary" onClick={() => handleBook(svc)} style={{ width:"auto", padding:"12px 24px", fontSize:14, borderRadius:12 }}>Book</button>
                 </div>
               </div>
             ))}

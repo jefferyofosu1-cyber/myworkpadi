@@ -7,7 +7,7 @@ export default function TaskerSidebar() {
   return (
     <aside className="tasker-sidebar">
       <div className="sidebar-brand">
-        <span className="brand-icon">✨</span> TASKGH
+        <span className="brand-icon">TG</span> TASKGH
         <div className="tasker-badge">Pro</div>
       </div>
       

@@ -15,6 +15,7 @@ import SupportPage from './pages/SupportPage'
 import BookingFlow from './pages/BookingFlow'
 import AuthFlow from './pages/AuthFlow'
 import PublicTaskerProfile from './pages/PublicTaskerProfile'
+import PrototypeFlow from './pages/PrototypeFlow'
 
 // Tasker Dashboard
 import TaskerLayout from './components/layout/TaskerLayout'
@@ -43,11 +44,12 @@ export default function App() {
           <Route path="/about" element={<MainLayout><AboutPage /></MainLayout>} />
           <Route path="/support" element={<MainLayout><SupportPage /></MainLayout>} />
           
-          <Route path="/booking" element={<MainLayout><BookingFlow /></MainLayout>} />
+          <Route path="/booking" element={<BookingFlow />} />
           <Route path="/profile/:id" element={<MainLayout><PublicTaskerProfile /></MainLayout>} />
           
           <Route path="/signup" element={<MainLayout><AuthFlow /></MainLayout>} />
           <Route path="/login" element={<MainLayout><AuthFlow /></MainLayout>} />
+          <Route path="/prototype" element={<PrototypeFlow />} />
           
           {/* Tasker Dashboard Routes */}
           <Route path="/tasker" element={<TaskerLayout />}>

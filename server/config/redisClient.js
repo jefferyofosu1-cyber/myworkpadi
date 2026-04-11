@@ -6,26 +6,46 @@ dotenv.config();
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
 if (!process.env.REDIS_URL) {
-  console.warn('⚠️  REDIS_URL is missing from environment. Falling back to localhost.');
+  console.warn('[WARN] REDIS_URL is missing from environment. Falling back to localhost.');
 }
 
 /**
- * Global Redis client instance.
- * Configuration:
- * - maxRetriesPerRequest: 3 (fails quickly if Redis is down)
+ * Global Redis client instance with Mock Fallback
  */
-export const redis = new Redis(redisUrl, {
-  maxRetriesPerRequest: 3,
-  retryStrategy(times) {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
-  }
-});
+let redisInstance;
 
-redis.on('error', (err) => {
-  console.error('[Redis Error]', err);
-});
+try {
+  redisInstance = new Redis(redisUrl, {
+    maxRetriesPerRequest: 1, // Fail fast for local testing
+    retryStrategy(times) {
+      if (times > 1) return null; // Don't keep retrying if it's not there
+      return 50;
+    }
+  });
 
-redis.on('connect', () => {
-  console.log('✅ Connected to Redis');
-});
+  redisInstance.on('error', (err) => {
+    console.error('[Redis Error] Connection failed. Using in-memory mock fallback.');
+    useMock();
+  });
+
+  redisInstance.on('connect', () => {
+    console.log('[OK] Connected to Redis');
+  });
+} catch (e) {
+  console.warn('[WARN] Could not initialize Redis client. Using in-memory mock.');
+  useMock();
+}
+
+function useMock() {
+  console.log('[MOCK] Initializing In-Memory Redis Mock for testing...');
+  const store = new Map();
+  redisInstance = {
+    get: async (key) => store.get(key),
+    set: async (key, val, mode, ttl) => store.set(key, val),
+    del: async (key) => store.delete(key),
+    on: () => {},
+    isMock: true
+  };
+}
+
+export const redis = redisInstance;

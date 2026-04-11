@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { X, ArrowRight } from "lucide-react";
 import { G as ThemeG } from "../constants/theme";
 
 /* ── TOKENS (Synced with Global) ── */
@@ -145,7 +146,7 @@ const MenuDrawer = ({ open, onClose }) => (
     }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:32 }}>
         <Logo size={30} />
-        <button onClick={onClose} style={{ background:"none", border:"none", cursor:"pointer", fontSize:22, color:G.steel }}>✕</button>
+        <button onClick={onClose} style={{ background:"none", border:"none", cursor:"pointer", display: "flex", alignItems: "center", justifyContent: "center", color:G.steel }}><X size={24} /></button>
       </div>
       {["Services","How It Works","Become a Tasker","About","Support"].map(link => (
         <div key={link} onClick={onClose} style={{
@@ -164,9 +165,16 @@ const MenuDrawer = ({ open, onClose }) => (
 /* ── HERO ── */
 const Hero = () => {
   const [phone, setPhone] = useState("");
+  const navigate = useNavigate();
+
+  const handleStart = () => {
+    const cleanPhone = phone.replace(/\D/g, "");
+    navigate(`/booking?phone=${cleanPhone}`);
+  };
+
   return (
     <section style={{
-      background: `linear-gradient(150deg, ${G.greenDeep || G.green} 0%, ${G.green} 100%)`,
+      background: `linear-gradient(150deg, ${ThemeG.greenDeep || ThemeG.green} 0%, ${G.green} 100%)`,
       position: "relative", overflow: "hidden", minHeight: "85vh",
       display: "flex", alignItems: "center", padding: "80px 0"
     }}>
@@ -190,10 +198,11 @@ const Hero = () => {
                 placeholder="Enter phone number" 
                 value={phone} 
                 onChange={e => setPhone(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleStart()}
                 style={{ border: "none", outline: "none", width: "100%", fontSize: 16, fontFamily: FB }} 
               />
             </div>
-            <button className="btn-primary" style={{ borderRadius: 12 }}>Get Started</button>
+            <button className="btn-primary" onClick={handleStart} style={{ borderRadius: 12 }}>Get Started</button>
           </div>
           <div style={{ marginTop: 32, display: "flex", gap: 24, flexWrap: "wrap" }}>
             {["ID-Verified", "Escrow Protection", "4.9/5 Rating"].map(t => (
@@ -224,7 +233,7 @@ const ServicesSection = () => (
             <h3 style={{ fontSize: 20, marginBottom: 8 }}>{s.name}</h3>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                <span style={{ color: G.gold, fontWeight: 700, fontSize: 18 }}>{s.price}</span>
-               <span style={{ color: G.green, fontWeight: 600, fontSize: 13 }}>Book Now →</span>
+               <span style={{ color: G.green, fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 4 }}>Book Now <ArrowRight size={14} /></span>
             </div>
           </Link>
         ))}
@@ -241,7 +250,11 @@ const ReviewsSection = () => (
            {/* Simple and elegant review grid */}
            {REVIEWS.slice(0, 3).map((r, i) => (
              <div key={i} style={{ border: `1.5px solid ${G.border}`, padding: 32, borderRadius: 24 }}>
-                <div style={{ color: G.gold, fontSize: 20, marginBottom: 12 }}>★★★★★</div>
+                <div style={{ color: G.gold, display: "flex", gap: 4, marginBottom: 12 }}>
+                  {[1, 2, 3, 4, 5].map(s => (
+                    <svg key={s} width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                  ))}
+                </div>
                 <p style={{ fontStyle: "italic", marginBottom: 24, lineHeight: 1.8, color: G.steel }}>"{r.text}"</p>
                 <div style={{ fontWeight: 700 }}>{r.name}</div>
                 <div style={{ fontSize: 12, color: G.mist }}>{r.area} · {r.service}</div>

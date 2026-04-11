@@ -7,7 +7,7 @@ const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'mock-anon-key';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'mock-service-key';
 
 if (!supabaseUrl) {
-  console.warn('⚠️ SUPABASE_URL is missing from environment variables.');
+  console.warn('[WARN] SUPABASE_URL is missing from environment variables.');
 }
 
 // Client for public operations

@@ -97,4 +97,30 @@ router.patch('/:id/reschedule', async (req, res) => {
     }
 });
 
+/**
+ * @desc Get available jobs for board
+ * @route GET /api/bookings/available
+ */
+router.get('/available', async (req, res) => {
+    try {
+        const jobs = await BookingService.getAvailableJobs();
+        res.json({ data: jobs });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+/**
+ * @desc Get tasker dashboard stats
+ * @route GET /api/bookings/stats/:taskerId
+ */
+router.get('/stats/:taskerId', async (req, res) => {
+    try {
+        const stats = await BookingService.getTaskerStats(req.params.taskerId);
+        res.json({ data: stats });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 export default router;

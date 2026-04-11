@@ -8,7 +8,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="container footer-grid">
         <div className="footer-col">
-          <div className="brand footer-brand">✨ TASKGH</div>
+          <div className="brand footer-brand">TASKGH</div>
           <p className="footer-desc">
             Your to-do list, done. Connecting you with verified taskers in Ghana.
           </p>

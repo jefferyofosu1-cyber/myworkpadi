@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { X, ChevronDown } from 'lucide-react';
 import { G, FH, FB } from '../../constants/theme';
 
 const Logo = () => (
@@ -65,7 +66,7 @@ export default function Navbar() {
               style={{ position:"relative", padding:"20px 0" }}
             >
               <NavLink to="/services" active={location.pathname === '/services'}>
-                Services <span style={{ fontSize:10, verticalAlign:"middle", opacity:0.5 }}>▼</span>
+                Services <ChevronDown size={12} style={{ marginLeft: 4, opacity: 0.6 }} />
               </NavLink>
               
               {dropdown === 'services' && (
@@ -100,7 +101,7 @@ export default function Navbar() {
               onMouseLeave={() => setDropdown(null)}
               style={{ position:"relative", padding:"20px 0" }}
             >
-              <span style={{ fontFamily:FB, fontSize:14, fontWeight:600, color:G.slate, cursor:"pointer" }}>More <span style={{ fontSize:10, verticalAlign:"middle", opacity:0.5 }}>▼</span></span>
+              <span style={{ fontFamily:FB, fontSize:14, fontWeight:600, color:G.slate, cursor:"pointer", display: "flex", alignItems: "center" }}>More <ChevronDown size={12} style={{ marginLeft: 4, opacity: 0.6 }} /></span>
               {dropdown === 'more' && (
                 <div style={{
                   position:"absolute", top:50, right:0, width:180, background:G.white,
@@ -143,7 +144,7 @@ export default function Navbar() {
           }} onClick={e => e.stopPropagation()}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:40 }}>
               <Logo />
-              <button onClick={() => setMenuOpen(false)} style={{ background:"none", border:"none", fontSize:24, color:G.mist }}>✕</button>
+              <button onClick={() => setMenuOpen(false)} style={{ background:"none", border:"none", display: "flex", alignItems: "center", justifyContent: "center", color:G.mist }}><X size={28} /></button>
             </div>
             <div style={{ display:"flex", flexDirection:"column", gap:24 }}>
               {['Services', 'How It Works', 'Become a Tasker', 'About', 'Support'].map(l => (

@@ -20,7 +20,7 @@ export default function AuthFlow() {
     
     setIsLoading(true);
     try {
-      await api.post('/auth/request-otp', { phone: identifier });
+      await api.post('/auth/trigger-otp', { identifier });
       setStep('OTP_INPUT');
     } catch (err) {
       alert(`OTP Error: ${err.message}`);
@@ -35,9 +35,9 @@ export default function AuthFlow() {
 
     setIsLoading(true);
     try {
-      const result = await api.post('/auth/verify-otp', { phone: identifier, otp });
-      localStorage.setItem('taskgh_token', result.session.token);
-      localStorage.setItem('taskgh_user_id', result.session.user.id);
+      const result = await api.post('/auth/verify-otp', { identifier, token: otp });
+      localStorage.setItem('taskgh_token', result.token);
+      localStorage.setItem('taskgh_user_id', result.user.id);
       
       if (isTasker) {
         navigate('/tasker');

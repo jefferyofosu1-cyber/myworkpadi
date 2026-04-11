@@ -23,5 +23,19 @@ if (serviceAccountPath) {
     console.warn('[Firebase] Missing FIREBASE_SERVICE_ACCOUNT_PATH. Push notifications will be mocked.');
 }
 
-export const messaging = firebaseApp ? admin.messaging() : null;
+/**
+ * Robust Mock for Firebase Messaging in development
+ */
+const mockMessaging = {
+    send: async (payload) => {
+        console.log('[PUSH MOCK] Sending notification:', payload);
+        return 'mock-message-id-' + Date.now();
+    },
+    sendEachForMulticast: async (payload) => {
+        console.log('[PUSH MOCK] Multicast notification:', payload);
+        return { successCount: payload.tokens.length, failureCount: 0 };
+    }
+};
+
+export const messaging = firebaseApp ? admin.messaging() : mockMessaging;
 export default firebaseApp;
