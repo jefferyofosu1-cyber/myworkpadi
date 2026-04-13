@@ -1349,8 +1349,7 @@ const MobileShellPage = () => {
           </div>
           </div>
         </div>
-      </div>
-    </>
+      </>
   );
 
   const screens = ["splash","home","tasker","jobs"];

@@ -615,7 +615,8 @@ const ProfilePage = ({ tasker }) => {
                   <MapPin size={13} />
                   <span style={{ fontFamily: FB, fontSize: 13 }}>{t.dist} km away</span>
                 </div>
-                <Badge color="rgba(255,255,255,0.9)" bg="rgba(255,255,255,0.15)"><Zap size={12} fill="white" stroke="white" /> Replies in {t.responseTime}</Badge>
+                  <Badge color="rgba(255,255,255,0.9)" bg="rgba(255,255,255,0.15)"><Zap size={12} fill="white" stroke="white" /> Replies in {t.responseTime}</Badge>
+                </div>
               </div>
             </div>
             {/* CTA */}
@@ -1127,6 +1128,7 @@ const AccountPage = ({ user, bookings, onSignOut }) => {
                       <div style={{ position: "absolute", width: 18, height: 18, borderRadius: "50%", background: G.white, top: 3, left: on ? 21 : 3, transition: "left 0.25s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
                     </div>
                   </div>
+                ))}
           {/* Security */}
                 <div style={{ padding: "16px 20px", borderBottom: `1px solid ${G.border}` }}>
                   <p style={{ fontFamily: FD, fontWeight: 700, fontSize: 15, color: G.slate }}>Security</p>

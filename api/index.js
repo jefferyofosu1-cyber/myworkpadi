@@ -12,10 +12,12 @@ import { globalErrorHandler, notFoundHandler } from '../server/middleware/errorH
 import { generalLimiter, authLimiter } from '../server/middleware/rateLimiter.js';
 import { setupSocket } from '../server/realtime/socket.js';
 
-// Workers & Queues
-import '../server/workers/notificationWorker.js';
-import '../server/workers/quoteExpiryWorker.js';
-import '../server/workers/payoutRetryWorker.js';
+// Workers & Queues (Persistent Background Jobs - Bypass on Vercel)
+if (!process.env.VERCEL) {
+  import('../server/workers/notificationWorker.js');
+  import('../server/workers/quoteExpiryWorker.js');
+  import('../server/workers/payoutRetryWorker.js');
+}
 import { scheduleCronJobs } from '../server/workers/cronWorker.js';
 
 // Routes
@@ -62,8 +64,8 @@ app.use(express.urlencoded({ extended: true }));
 // 3. Initialize Socket.io
 setupSocket(httpServer);
 
-// 4. Initialize Cron Jobs
-if (process.env.NODE_ENV === 'production' || process.env.ENABLE_CRONS === 'true') {
+// 4. Initialize Cron Jobs (Persistent Maintenance - Bypass on Vercel)
+if (!process.env.VERCEL && (process.env.NODE_ENV === 'production' || process.env.ENABLE_CRONS === 'true')) {
   scheduleCronJobs().catch(err => console.error('[Cron] Setup failed:', err));
 }
 
@@ -99,8 +101,8 @@ if (process.env.SENTRY_DSN) {
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
 
-// Start Server
-if (process.env.NODE_ENV !== 'test') {
+// Start Server (Bypass on Vercel, which uses its own entry point)
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   httpServer.listen(PORT, () => {
     console.log(`🚀 TaskGH Server running on http://localhost:${PORT}`);
     console.log(`📡 Socket.io ready & BullMQ workers active`);

@@ -70,7 +70,8 @@ export default function App() {
 
           <Route path="*" element={<MainLayout><div className="container" style={{padding: '120px 0', textAlign: 'center'}}><h2>404 - Page Not Found</h2></div></MainLayout>} />
         </Routes>
-      </div>
+        </div>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

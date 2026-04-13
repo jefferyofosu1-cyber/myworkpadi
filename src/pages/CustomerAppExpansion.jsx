@@ -311,7 +311,7 @@ const TrackingPage = ({ user, booking, loading }) => {
 
         <div style={{ position:"absolute", top:220, animation:"carDrive 8s linear infinite", display:"flex", flexDirection:"column", alignItems:"center" }}>
           <div style={{ position:"relative" }}>
-            <div style={{ width:8, height:8, borderRadius:"50%", background:"rgba(10,110,74,0.4)", position:"absolute", top:-4, left:-4, width:50, height:50, animation:"ping 2s ease-out infinite" }}/>
+            <div style={{ borderRadius:"50%", background:"rgba(10,110,74,0.4)", position:"absolute", top:-4, left:-4, width:50, height:50, animation:"ping 2s ease-out infinite" }}/>
             <div style={{ width:42, height:42, borderRadius:"50%", background:G.green, border:`3px solid ${G.white}`, display:"flex", alignItems:"center", justifyContent:"center", color: G.white, boxShadow:`0 4px 14px rgba(10,110,74,0.6)`, position:"relative" }}><Wrench size={20} /></div>
           </div>
           <div style={{ width:0, height:0, borderLeft:"7px solid transparent", borderRight:"7px solid transparent", borderTop:`9px solid ${G.green}`, marginTop:-1 }}/>
