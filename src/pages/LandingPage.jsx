@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { X, ArrowRight } from "lucide-react";
 import { G as ThemeG } from "../constants/theme";
 
-/* ── TOKENS (Synced with Global) ── */
+/* --- TOKENS (Synced with Global) --- */
 const G = {
   green:     ThemeG.green,
   gold:      ThemeG.gold,
@@ -22,7 +22,7 @@ const G = {
 const FH = "'Space Grotesk', sans-serif";
 const FB = "'Inter', sans-serif";
 
-/* ── DATA (Themed) ── */
+/* --- DATA (Themed) --- */
 const SERVICES = [
   { abbr:"AC",  color:G.gold,  name:"AC Repair",        type:"assessment", price:"GHS 25",  popular:true  },
   { abbr:"EL",  color:G.gold,  name:"Electrical",        type:"assessment", price:"GHS 25",  popular:false },
@@ -42,7 +42,7 @@ const TASKERS = [
 ];
 
 const REVIEWS = [
-  { name:"Sandra A.", area:"East Legon",    stars:5, text:"Emmanuel fixed my AC in under 2 hours. The escrow payment made me feel so safe — I knew my money was protected until I confirmed the job. Will use again!", service:"AC Repair" },
+  { name:"Sandra A.", area:"East Legon",    stars:5, text:"Emmanuel fixed my AC in under 2 hours. The escrow payment made me feel so safe - I knew my money was protected until I confirmed the job. Will use again!", service:"AC Repair" },
   { name:"Kofi B.",   area:"Airport Hills", stars:5, text:"Finally a platform that vets their taskers properly. Abena cleaned my home thoroughly. The booking process was seamless.", service:"House Cleaning" },
   { name:"Efua M.",   area:"Cantonments",   stars:5, text:"Kwabena fixed a bad pipe leak on a Saturday morning within 3 hrs of booking. The quote was transparent. No surprises.", service:"Plumbing" },
   { name:"Nana K.",   area:"Spintex",       stars:4, text:"The polytank cleaning service was incredible. They sent before/after photos. Never realized how dirty it actually was!", service:"Polytank Cleaning" },
@@ -65,13 +65,13 @@ const STEPS = [
 const FAQS = [
   { q:"How are Taskers verified?",             a:"Every Tasker submits a Ghana Card or Voter ID, passes a background check, and provides at least one professional reference. Only approved Taskers appear on the platform." },
   { q:"What if I'm not happy with the job?",   a:"Our Happiness Guarantee means we'll send another Tasker to fix it free, or refund you in full. Just raise a dispute within 24 hours." },
-  { q:"How does the escrow payment work?",     a:"When you pay, funds are held securely — not released to the Tasker until you confirm the job is done. For materials, 50% is released upfront and the Tasker must upload a receipt." },
+  { q:"How does the escrow payment work?",     a:"When you pay, funds are held securely - not released to the Tasker until you confirm the job is done. For materials, 50% is released upfront and the Tasker must upload a receipt." },
   { q:"What areas in Accra do you cover?",     a:"We cover East Legon, Airport Residential, Cantonments, Osu, Spintex, Tema, Adenta, and Madina. More areas launching soon." },
   { q:"How quickly can I get a Tasker?",       a:"Most bookings are matched within 30 minutes. Many services are available same-day in our high-coverage areas." },
-  { q:"What payment methods do you accept?",   a:"MTN MoMo, Vodafone Cash, and AirtelTigo Money. Card payments coming soon." },
+  { q:"What payment methods do you accept?",   a:"MTN MoMo, Telecel Cash, and AT Money. Card payments coming soon." },
 ];
 
-/* ════════════════ COMPONENTS ════════════════ */
+/* ================================ COMPONENTS ================================ */
 
 /* NAV */
 const Nav = ({ onMenu }) => {
@@ -162,7 +162,7 @@ const MenuDrawer = ({ open, onClose }) => (
   </>
 );
 
-/* ── HERO ── */
+/* --- HERO --- */
 const Hero = () => {
   const [phone, setPhone] = useState("");
   const navigate = useNavigate();
@@ -218,7 +218,7 @@ const Hero = () => {
   );
 };
 
-/* ── SERVICES ── */
+/* --- SERVICES --- */
 const ServicesSection = () => (
   <section style={{ padding: "100px 0", background: G.offWhite }}>
     <div className="container">
@@ -242,7 +242,7 @@ const ServicesSection = () => (
   </section>
 );
 
-/* ── REVIEWS ── */
+/* --- REVIEWS --- */
 const ReviewsSection = () => (
     <section style={{ padding: "100px 0", background: G.white }}>
       <div className="container">
@@ -257,7 +257,7 @@ const ReviewsSection = () => (
                 </div>
                 <p style={{ fontStyle: "italic", marginBottom: 24, lineHeight: 1.8, color: G.steel }}>"{r.text}"</p>
                 <div style={{ fontWeight: 700 }}>{r.name}</div>
-                <div style={{ fontSize: 12, color: G.mist }}>{r.area} · {r.service}</div>
+                <div style={{ fontSize: 12, color: G.mist }}>{r.area} - {r.service}</div>
              </div>
            ))}
         </div>
@@ -265,7 +265,7 @@ const ReviewsSection = () => (
     </section>
 );
 
-/* ── FINAL CLEAN COMPONENT ── */
+/* --- FINAL CLEAN COMPONENT --- */
 export default function LandingPage() {
   return (
     <div className="page-enter">

@@ -38,6 +38,9 @@ DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tasker_onboarding_status') THEN
         CREATE TYPE public.tasker_onboarding_status AS ENUM ('pending', 'in_review', 'active');
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'admin_role') THEN
+        CREATE TYPE public.admin_role AS ENUM ('SUPER_ADMIN', 'OPERATIONS_ADMIN', 'SUPPORT_ADMIN');
+    END IF;
 END $$;
 
 -- 3. TABLES
@@ -48,8 +51,11 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   full_name TEXT,
   phone_number TEXT UNIQUE,
   momo_number TEXT,
+  momo_provider TEXT, -- 'MTN', 'TELECEL', 'AT'
   residential_area TEXT,
   is_tasker BOOLEAN DEFAULT FALSE,
+  is_admin BOOLEAN DEFAULT FALSE,
+  fcm_token TEXT, -- For push notifications
   location_coords extensions.geography(POINT, 4326),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -63,7 +69,7 @@ CREATE TABLE IF NOT EXISTS public.tasker_profiles (
   reviews_count INT DEFAULT 0,
   tasks_completed INT DEFAULT 0,
   is_verified BOOLEAN DEFAULT FALSE,
-  skills UUID[], -- Array of service IDs
+  skills UUID[], -- Array of service/category IDs
   ghana_card_front_url TEXT,
   ghana_card_back_url TEXT,
   hourly_rate DECIMAL(10,2) DEFAULT 0.00,
@@ -76,12 +82,21 @@ CREATE TABLE IF NOT EXISTS public.tasker_profiles (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Services Categories
-CREATE TABLE IF NOT EXISTS public.services (
+-- Admin Profiles
+CREATE TABLE IF NOT EXISTS public.admin_profiles (
+  id UUID REFERENCES public.profiles(id) ON DELETE CASCADE PRIMARY KEY,
+  role public.admin_role DEFAULT 'SUPPORT_ADMIN',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Categories (formerly services)
+CREATE TABLE IF NOT EXISTS public.categories (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
-  base_price DECIMAL(10,2),
+  assessment_fee_ghs DECIMAL(10,2) DEFAULT 300.00,
   icon_name TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -91,16 +106,18 @@ CREATE TABLE IF NOT EXISTS public.bookings (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   customer_id UUID REFERENCES public.profiles(id) NOT NULL,
   tasker_id UUID REFERENCES public.tasker_profiles(id), -- Can be NULL until assigned
-  service_id UUID REFERENCES public.services(id),
-  category_id UUID, -- For flat mapping during matching
+  category_id UUID REFERENCES public.categories(id),
   type public.booking_type NOT NULL DEFAULT 'assessment',
   status public.booking_status DEFAULT 'requested',
-  description TEXT,
+  description TEXT, -- Problem description
   location_address TEXT,
+  location_lat FLOAT,
+  location_lng FLOAT,
   location_coords extensions.geography(POINT, 4326),
   scheduled_at TIMESTAMP WITH TIME ZONE,
-  quoted_price DECIMAL(10,2),
-  assessment_fee_ghs DECIMAL(10,2) DEFAULT 100.00,
+  assigned_at TIMESTAMP WITH TIME ZONE,
+  quoted_price DECIMAL(10,2), -- Final labor cost
+  assessment_fee_ghs DECIMAL(10,2) DEFAULT 300.00,
   materials_receipt_url TEXT, -- Photo proof to unblock job start
   matching_rounds INT DEFAULT 0, -- Process 4 tracking
   is_manual_selection BOOLEAN DEFAULT FALSE, -- Premium direct request
@@ -128,11 +145,11 @@ CREATE TABLE IF NOT EXISTS public.quotes (
   labor_cost DECIMAL(10,2) NOT NULL,
   materials_cost DECIMAL(10,2) NOT NULL,
   total_cost DECIMAL(10,2) GENERATED ALWAYS AS (labor_cost + materials_cost) STORED,
-  status TEXT DEFAULT 'pending', -- pending, approved, declined
+  status TEXT DEFAULT 'pending', -- pending, approved, declined, expired, superseded
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Reviews (Process 2 Step 6)
+-- Reviews
 CREATE TABLE IF NOT EXISTS public.reviews (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   booking_id UUID REFERENCES public.bookings(id) ON DELETE CASCADE,
@@ -143,15 +160,18 @@ CREATE TABLE IF NOT EXISTS public.reviews (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Escrow Payments
-CREATE TABLE IF NOT EXISTS public.escrow_transactions (
+-- Payments (Standardized naming)
+CREATE TABLE IF NOT EXISTS public.payments (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   booking_id UUID REFERENCES public.bookings(id) ON DELETE CASCADE,
-  amount DECIMAL(10,2) NOT NULL,
+  payer_id UUID REFERENCES public.profiles(id),
+  amount_ghs DECIMAL(10,2) NOT NULL,
+  p_type TEXT CHECK (p_type IN ('assessment', 'deposit')),
   momo_number TEXT,
-  network_provider TEXT,
-  status public.payment_status DEFAULT 'pending',
-  paystack_reference TEXT UNIQUE,
+  momo_provider TEXT,
+  status TEXT DEFAULT 'pending', -- pending, success, failed
+  momo_reference TEXT UNIQUE,
+  paid_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -169,6 +189,19 @@ CREATE TABLE IF NOT EXISTS public.disputes (
   strike_applied BOOLEAN DEFAULT FALSE,
   sla_expires_at TIMESTAMP WITH TIME ZONE,
   resolved_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Notifications (History for inbox)
+CREATE TABLE IF NOT EXISTS public.notifications (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  type TEXT DEFAULT 'general',
+  data JSONB DEFAULT '{}',
+  is_read BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -230,9 +263,75 @@ BEGIN
 END;
 $$;
 
--- 5. SECURITY (RLS)
+-- 5. PERFORMANCE INDICES
+CREATE INDEX IF NOT EXISTS idx_profiles_phone ON public.profiles(phone_number);
+CREATE INDEX IF NOT EXISTS idx_bookings_customer_id ON public.bookings(customer_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_tasker_id ON public.bookings(tasker_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_status ON public.bookings(status);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON public.notifications(user_id) WHERE is_read = FALSE;
+CREATE INDEX IF NOT EXISTS idx_payments_reference ON public.payments(momo_reference);
+
+-- 6. SECURITY (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tasker_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.escrow_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.disputes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.escrow_ledger ENABLE ROW LEVEL SECURITY;
+
+-- 🛡️ Profiles: Users can read/edit their own data.
+CREATE POLICY "Users can view own profile" ON public.profiles 
+FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile" ON public.profiles 
+FOR UPDATE USING (auth.uid() = id);
+
+-- 🛡️ Tasker Profiles: Public read (for matching/search), self-management.
+CREATE POLICY "Tasker profiles are viewable by all users" ON public.tasker_profiles 
+FOR SELECT USING (TRUE);
+
+CREATE POLICY "Taskers can edit own profile" ON public.tasker_profiles 
+FOR UPDATE USING (auth.uid() = id);
+
+-- 🛡️ Bookings: Critical privacy logic.
+-- A booking is visible to the customer who created it OR the tasker assigned to it.
+CREATE POLICY "Bookings visible to customer or assigned tasker" ON public.bookings
+FOR SELECT USING (
+    auth.uid() = customer_id OR 
+    auth.uid() = tasker_id
+);
+
+CREATE POLICY "Customers can create bookings" ON public.bookings
+FOR INSERT WITH CHECK (auth.uid() = customer_id);
+
+CREATE POLICY "Owners or assigned taskers can update bookings" ON public.bookings
+FOR UPDATE USING (
+    auth.uid() = customer_id OR 
+    auth.uid() = tasker_id
+);
+
+-- 🛡️ Payments: Only the payer can see their transaction history.
+CREATE POLICY "Payments visible to payer" ON public.payments
+FOR SELECT USING (auth.uid() = payer_id);
+
+-- 🛡️ Notifications: Private inbox.
+CREATE POLICY "Notifications visible to recipient" ON public.notifications
+FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Notifications updateable by recipient" ON public.notifications
+FOR UPDATE USING (auth.uid() = user_id);
+
+-- 🛡️ Disputes
+CREATE POLICY "Involved parties can view disputes" ON public.disputes
+FOR SELECT USING (
+    auth.uid() = raised_by OR 
+    EXISTS (SELECT 1 FROM public.bookings b WHERE b.id = booking_id AND (b.customer_id = auth.uid() OR b.tasker_id = auth.uid()))
+);
+
+-- 🛡️ Admin Access (Safety bypass for authorized roles)
+CREATE POLICY "Admins have full access" ON public.profiles
+FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.admin_profiles WHERE id = auth.uid() AND is_active = TRUE)
+);
+-- Note: In a real production setup, more granular admin policies would be defined across all tables.

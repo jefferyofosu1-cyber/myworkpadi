@@ -25,7 +25,6 @@ export class BookingService {
       .insert({
         customer_id,
         category_id,
-        service_id: payload.service_id, // Ensure service_id is passed if available
         b_type,
         status: 'requested', 
         location_address,
@@ -33,7 +32,7 @@ export class BookingService {
         location_lng,
         problem_description,
         scheduled_at,
-        assessment_fee_ghs: 100.00,
+        assessment_fee_ghs: 300.00,
         tasker_id: payload.tasker_id || null, // Direct request target
         is_manual_selection: !!payload.tasker_id
       })
@@ -151,9 +150,8 @@ export class BookingService {
 
     // 1. Calculate Refund Logic
     if (!booking.tasker_id || booking.status === 'requested') {
-        // Scenario 1 & 2: Before Tasker accepts or Matching failure
         // 100% Refund (Assessment fee was held, now released back)
-        refundAmount = booking.assessment_fee_ghs || 100.00;
+        refundAmount = booking.assessment_fee_ghs || 300.00;
         console.log(`[Cancel] Full refund for ${bookingId} (No Tasker assigned)`);
     } else {
         // Scenario 5: After Tasker accepts
@@ -163,7 +161,7 @@ export class BookingService {
             console.log(`[Cancel] Late cancellation (<2hr). Fee non-refundable.`);
         } else {
             // Cancel > 2hr: 100% Refund
-            refundAmount = booking.assessment_fee_ghs || 100.00;
+            refundAmount = booking.assessment_fee_ghs || 300.00;
             console.log(`[Cancel] Pre-work cancellation (>2hr). Full refund.`);
         }
     }

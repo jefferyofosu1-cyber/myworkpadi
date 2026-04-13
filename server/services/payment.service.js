@@ -84,15 +84,19 @@ export class PaymentService {
    * Validates Paystack Webhooks and safely interacts with the Escrow Ledger.
    */
   static async handleWebhook(signature, payloadBody) {
+    if (!PAYSTACK_SECRET_KEY) {
+      console.error('[CRITICAL] PAYSTACK_SECRET_KEY missing. Webhook cannot be verified.');
+      throw new Error('Server configuration error: Webhook verification disabled.');
+    }
+
     // 1. Verify Trust
-    if (PAYSTACK_SECRET_KEY) {
-      const hash = crypto.createHmac('sha512', PAYSTACK_SECRET_KEY)
-                         .update(JSON.stringify(payloadBody))
-                         .digest('hex');
-                         
-      if (hash !== signature) {
-        throw new Error('Invalid Paystack Webhook Signature. Unauthorized request.');
-      }
+    const hash = crypto.createHmac('sha512', PAYSTACK_SECRET_KEY)
+                       .update(JSON.stringify(payloadBody))
+                       .digest('hex');
+                       
+    if (hash !== signature) {
+      console.warn('[SECURITY] Invalid Paystack Webhook Signature blocked.');
+      throw new Error('Invalid Paystack Webhook Signature. Unauthorized request.');
     }
 
     const event = payloadBody.event;

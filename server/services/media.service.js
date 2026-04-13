@@ -42,54 +42,47 @@ export class MediaService {
   }
 
   /**
-   * Uploads a tasker's ID document image and stores the URL in the DB
-   * @param {Buffer} fileBuffer
+   * Uploads a tasker's ID document images (front and back) and stores the URLs in the DB
+   * @param {Buffer} frontBuffer
+   * @param {Buffer} backBuffer
    * @param {string} userId
    */
-  static async uploadIDDocument(fileBuffer, userId) {
-    const result = await this.uploadBuffer(fileBuffer, 'documents', `id_${userId}`);
-    const secureUrl = result.secure_url;
+  static async uploadGhanaCardPhotos(frontBuffer, backBuffer, userId) {
+    const frontResult = await this.uploadBuffer(frontBuffer, 'documents', `id_front_${userId}`);
+    const backResult = await this.uploadBuffer(backBuffer, 'documents', `id_back_${userId}`);
 
-    // Persist URL on the tasker_profiles record
     const { error } = await supabase
       .from('tasker_profiles')
-      .update({ id_document_url: secureUrl })
-      .eq('user_id', userId);
+      .update({ 
+        ghana_card_front_url: frontResult.secure_url,
+        ghana_card_back_url: backResult.secure_url 
+      })
+      .eq('id', userId);
 
-    if (error) throw new Error(`Failed to save ID doc URL: ${error.message}`);
-    return secureUrl;
+    if (error) throw new Error(`Failed to save ID docs: ${error.message}`);
+    
+    return { 
+      frontUrl: frontResult.secure_url, 
+      backUrl: backResult.secure_url 
+    };
   }
 
   /**
-   * Uploads receipt photos for a booking and creates a DB record
-   * @param {Buffer[]} fileBuffers - array of multer file buffers
+   * Uploads a receipt photo for a booking and updates the booking record
+   * @param {Buffer} fileBuffer
    * @param {string} bookingId
-   * @param {string} uploadedBy - userId
-   * @param {object} meta - { merchantName, totalAmount }
    */
-  static async uploadReceiptPhotos(fileBuffers, bookingId, uploadedBy, meta = {}) {
-    const uploadPromises = fileBuffers.map((buf, i) =>
-      this.uploadBuffer(buf, 'receipts', `receipt_${bookingId}_${i}`)
-    );
+  static async uploadReceiptPhoto(fileBuffer, bookingId) {
+    const result = await this.uploadBuffer(fileBuffer, 'receipts', `receipt_${bookingId}_${Date.now()}`);
+    const secureUrl = result.secure_url;
 
-    const results = await Promise.all(uploadPromises);
-    const photoUrls = results.map(r => r.secure_url);
+    const { error } = await supabase
+      .from('bookings')
+      .update({ materials_receipt_url: secureUrl })
+      .eq('id', bookingId);
 
-    // Persist the receipts record in Supabase
-    const { data: receipt, error } = await supabase
-      .from('receipts')
-      .insert({
-        booking_id: bookingId,
-        uploaded_by: uploadedBy,
-        photo_urls: photoUrls,
-        merchant_name: meta.merchantName || null,
-        total_amount_ghs: meta.totalAmount || 0,
-      })
-      .select()
-      .single();
-
-    if (error) throw new Error(`Failed to save receipt record: ${error.message}`);
-    return receipt;
+    if (error) throw new Error(`Failed to update booking receipt: ${error.message}`);
+    return secureUrl;
   }
 
   /**

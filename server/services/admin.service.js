@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase.js';
+import { supabase, supabaseAdmin } from '../config/supabase.js';
 
 export class AdminService {
   /**
@@ -9,7 +9,7 @@ export class AdminService {
     const onboardingStatus = isVerified ? 'active' : 'pending';
     
     // 1. Update verification status and onboarding lifecycle in tasker_profiles
-    const { data: profile, error: profileErr } = await supabase
+    const { data: profile, error: profileErr } = await supabaseAdmin
       .from('tasker_profiles')
       .update({ 
           is_verified: isVerified,
@@ -32,7 +32,7 @@ export class AdminService {
    * Manually triggers a payout release (Process 7).
    */
   static async triggerPayout(bookingId) {
-    const { data: booking, error: fetchErr } = await supabase
+    const { data: booking, error: fetchErr } = await supabaseAdmin
       .from('bookings')
       .select('*, escrow_transactions(*)')
       .eq('id', bookingId)
@@ -44,7 +44,7 @@ export class AdminService {
     }
 
     // 1. Update Escrow status to 'released'
-    const { error: escrowErr } = await supabase
+    const { error: escrowErr } = await supabaseAdmin
       .from('escrow_transactions')
       .update({ status: 'released' })
       .eq('booking_id', bookingId);
@@ -52,7 +52,7 @@ export class AdminService {
     if (escrowErr) throw new Error('Failed to update escrow status');
 
     // 2. Finalize Booking status to 'payout_ready'
-    const { error: bookingErr } = await supabase
+    const { error: bookingErr } = await supabaseAdmin
       .from('bookings')
       .update({ status: 'payout_ready' })
       .eq('id', bookingId);
@@ -67,10 +67,10 @@ export class AdminService {
    */
   static async getPlatformStats() {
     // 1. Total Jobs Count
-    const { count: jobCount } = await supabase.from('bookings').select('*', { count: 'exact', head: true });
+    const { count: jobCount } = await supabaseAdmin.from('bookings').select('*', { count: 'exact', head: true });
     
     // 2. Volume in Escrow (Sum of held_in_escrow)
-    const { data: escrowVolume } = await supabase
+    const { data: escrowVolume } = await supabaseAdmin
         .from('escrow_transactions')
         .select('amount')
         .eq('status', 'held_in_escrow');
@@ -82,5 +82,76 @@ export class AdminService {
       volumeInEscrow: totalEscrow,
       activeDisputes: 0 // Mock for now
     };
+  }
+
+  /**
+   * Fetches all admin staff profiles for the dashboard management view.
+   */
+  static async getAdminProfiles() {
+    const { data, error } = await supabaseAdmin
+      .from('admin_profiles')
+      .select(`
+        id,
+        role,
+        is_active,
+        created_at,
+        profiles!inner (
+          full_name,
+          phone_number
+        )
+      `);
+    
+    if (error) throw new Error('Failed to fetch admin profiles');
+    return data.map(admin => ({
+      id: admin.id,
+      role: admin.role,
+      isActive: admin.is_active,
+      fullName: admin.profiles.full_name,
+      phoneNumber: admin.profiles.phone_number,
+      createdAt: admin.created_at
+    }));
+  }
+
+  /**
+   * Promotes a user to admin and initializes their role.
+   */
+  static async createAdminProfile(userId, role) {
+    // 1. Mark as admin in profiles
+    const { error: profileErr } = await supabaseAdmin
+      .from('profiles')
+      .update({ is_admin: true })
+      .eq('id', userId);
+    
+    if (profileErr) throw new Error('Failed to update profile to admin');
+
+    // 2. Insert into admin_profiles
+    const { data, error: adminErr } = await supabaseAdmin
+      .from('admin_profiles')
+      .upsert({
+        id: userId,
+        role: role,
+        is_active: true,
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (adminErr) throw new Error('Failed to create admin profile record');
+    return data;
+  }
+
+  /**
+   * Deactivates or Reactivates an admin account.
+   */
+  static async updateAdminStatus(userId, isActive) {
+    const { data, error } = await supabaseAdmin
+      .from('admin_profiles')
+      .update({ is_active: isActive, updated_at: new Date().toISOString() })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error('Failed to update admin status');
+    return data;
   }
 }

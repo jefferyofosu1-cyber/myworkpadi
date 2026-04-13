@@ -1,4 +1,5 @@
 import express from 'express';
+import { authenticate } from '../middleware/auth.middleware.js';
 import { ProfileService } from '../services/profile.service.js';
 
 const router = express.Router();
@@ -7,17 +8,34 @@ const router = express.Router();
  * @desc Get current profile
  * @route GET /api/profiles/me
  */
-router.get('/me', async (req, res) => {
-    // Logic to fetch from Supabase based on userId in header/token
-    res.json({ message: 'Profile data placeholder' });
+router.get('/me', authenticate, async (req, res) => {
+    try {
+        const profile = await ProfileService.getProfileById(req.user.userId);
+        res.json({ user: profile });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+/**
+ * @desc Get all active taskers for discovery
+ * @route GET /api/profiles/taskers
+ */
+router.get('/taskers', async (req, res) => {
+    try {
+        const taskers = await ProfileService.getActiveTaskers();
+        res.json({ taskers });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
 });
 
 /**
  * @desc Complete Customer Profile (Step 4)
  * @route PATCH /api/profiles/me
  */
-router.patch('/me', async (req, res) => {
-  const userId = req.headers['x-user-id']; // Mock middleware placeholder
+router.patch('/me', authenticate, async (req, res) => {
+  const userId = req.user.userId;
   try {
     const profile = await ProfileService.updateMyProfile(userId, req.body);
     res.json({ message: 'Profile updated successfully', profile });
@@ -30,8 +48,8 @@ router.patch('/me', async (req, res) => {
  * @desc Update Tasker Business Details (Step 6)
  * @route PATCH /api/profiles/tasker-business
  */
-router.patch('/tasker-business', async (req, res) => {
-  const userId = req.headers['x-user-id'];
+router.patch('/tasker-business', authenticate, async (req, res) => {
+  const userId = req.user.userId;
   try {
     const profile = await ProfileService.updateTaskerBusiness(userId, req.body);
     res.json({ message: 'Tasker business updated', profile });
@@ -44,8 +62,8 @@ router.patch('/tasker-business', async (req, res) => {
  * @desc Link Identity Cards after Upload (Step 3)
  * @route POST /api/profiles/identity-cards
  */
-router.post('/identity-cards', async (req, res) => {
-  const userId = req.headers['x-user-id'];
+router.post('/identity-cards', authenticate, async (req, res) => {
+  const userId = req.user.userId;
   const { frontUrl, backUrl } = req.body;
   try {
     const profile = await ProfileService.linkIdentityCards(userId, frontUrl, backUrl);
@@ -59,8 +77,8 @@ router.post('/identity-cards', async (req, res) => {
  * @desc Update Tasker Skills
  * @route PATCH /api/profiles/skills
  */
-router.patch('/skills', async (req, res) => {
-  const userId = req.headers['x-user-id'];
+router.patch('/skills', authenticate, async (req, res) => {
+  const userId = req.user.userId;
   const { skillIds } = req.body;
   try {
     const profile = await ProfileService.updateTaskerSkills(userId, skillIds);
@@ -74,8 +92,8 @@ router.patch('/skills', async (req, res) => {
  * @desc Submit for Admin Vetting
  * @route POST /api/profiles/submit-vetting
  */
-router.post('/submit-vetting', async (req, res) => {
-  const userId = req.headers['x-user-id'];
+router.post('/submit-vetting', authenticate, async (req, res) => {
+  const userId = req.user.userId;
   try {
     const profile = await ProfileService.submitForVetting(userId);
     res.json({ message: 'Submitted for vetting', profile });

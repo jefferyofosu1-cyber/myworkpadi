@@ -1,7 +1,8 @@
 import React from 'react';
 import { useBooking } from '../BookingContext';
+import { ChevronLeft } from 'lucide-react';
 
-/* ── TOKENS (Mirrored from Prototype) ── */
+/* --- TOKENS (Mirrored from Prototype) --- */
 export const G = {
   green: "#0A6E4A", greenLight: "#12A06B", greenDeep: "#064D34",
   greenPale: "#E8F5EF", gold: "#E8A020", goldPale: "#FDF4E3",
@@ -26,8 +27,8 @@ export const StatusBar = ({ light = false }) => (
 );
 
 export const BackBtn = ({ onBack, light = false }) => (
-  <button onClick={onBack} style={{ background: light ? "rgba(255,255,255,0.2)" : G.cloud, border: "none", width: 40, height: 40, borderRadius: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: light ? G.white : G.slate, transition: "all 0.2s" }}>
-    ←
+  <button onClick={onBack} style={{ background: light ? "rgba(255,255,255,0.2)" : G.cloud, border: "none", width: 40, height: 40, borderRadius: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: light ? G.white : G.slate, transition: "all 0.2s" }}>
+    <ChevronLeft size={20} />
   </button>
 );
 

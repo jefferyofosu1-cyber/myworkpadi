@@ -41,7 +41,7 @@ export default function ServicesPage() {
             30+ Home Services<br /><span style={{ color:G.gold }}>All in One Place</span>
           </h1>
           <p style={{ fontFamily:FB, fontSize:16, color:"rgba(255,255,255,0.8)", lineHeight:1.7, marginBottom:28 }}>
-            Fixed-price jobs you can book instantly, or assessment visits for complex repairs — all with escrow-protected payments.
+            Fixed-price jobs you can book instantly, or assessment visits for complex repairs - all with escrow-protected payments.
           </p>
           <div style={{ background:"rgba(255,255,255,0.12)", borderRadius:14, padding:12, display:"flex", gap:12, backdropFilter:"blur(8px)", maxWidth:440, margin:"0 auto", border: '1px solid rgba(255,255,255,0.2)' }}>
             <input 

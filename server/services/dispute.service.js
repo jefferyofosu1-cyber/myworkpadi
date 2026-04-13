@@ -58,10 +58,41 @@ export class DisputeService {
     const { BookingService } = await import('./booking.service.js');
     await BookingService.transitionStatus(bookingId, 'disputed');
 
-    // 4. Notify Admin Queue (Stub)
-    console.log(`[Dispute] Raised for ${bookingId}. SLA expires: ${slaExpiresAt}`);
+    // 4. Freeze Escrow (Process 5 - Audit Trail)
+    // Insert a record into escrow_ledger to mark the funds as "frozen" or "held" in dispute
+    await supabase.from('escrow_ledger').insert({
+        booking_id: bookingId,
+        amount_ghs: booking.quoted_price || 0,
+        e_type: 'held', // Implicitly frozen by being in 'disputed' state
+        note: `Escrow Frozen: Dispute ${dispute.id} raised by ${userId}`
+    });
+
+    // 5. Notify Admin Queue
+    const adminMsg = `🚨 NEW DISPUTE: Booking ${bookingId}\nCategory: ${category}\nReason: ${reason}\nSLA: 4 hours`;
+    await NotificationService.sendWhatsApp('ADMIN_LEAD_PHONE', adminMsg);
+    
     await NotificationService.sendPush(booking.customer_id, 'Dispute Raised', 'Our team will review your dispute within 4 hours.');
 
+    return dispute;
+  }
+
+  /**
+   * Moves a dispute to 'investigating' state.
+   */
+  static async investigateDispute(disputeId, adminId, notes) {
+    const { data: dispute, error } = await supabase
+      .from('disputes')
+      .update({ 
+          status: 'investigating', 
+          admin_notes: notes,
+          updated_at: new Date().toISOString()
+      })
+      .eq('id', disputeId)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to update dispute: ${error.message}`);
+    
     return dispute;
   }
 
@@ -138,7 +169,6 @@ export class DisputeService {
                 .insert({
                     customer_id: dispute.bookings.customer_id,
                     category_id: dispute.bookings.category_id,
-                    service_id: dispute.bookings.service_id,
                     type: dispute.bookings.type,
                     status: 'requested',
                     description: `[REWORK] ${dispute.bookings.description}`,

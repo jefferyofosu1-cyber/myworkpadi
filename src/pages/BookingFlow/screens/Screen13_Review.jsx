@@ -33,7 +33,7 @@ export default function Screen13_Review() {
                 </div>
 
                 <button className="btn btn-green" onClick={goNext} disabled={rating === 0} style={{ position: "fixed", bottom: 24, left: "5%", width: "90%", zIndex: 10 }}>
-                    Submit Review & Finish →
+                    Submit Review & Finish
                 </button>
             </div>
         </div>

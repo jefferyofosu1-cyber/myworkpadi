@@ -36,7 +36,7 @@ export default function Screen14_Complete() {
                 </div>
             </div>
             
-            <p style={{ fontFamily: FB, fontSize: 12, color: "rgba(255,255,255,0.5)", textAlign: "center", padding: 24 }}>© 2026 TaskGH Ghana. All rights reserved.</p>
+            <p style={{ fontFamily: FB, fontSize: 12, color: "rgba(255,255,255,0.5)", textAlign: "center", padding: 24 }}>(c) 2026 TaskGH Ghana. All rights reserved.</p>
         </div>
     );
 }

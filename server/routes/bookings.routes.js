@@ -1,17 +1,40 @@
 import express from 'express';
+import { authenticate } from '../middleware/auth.middleware.js';
 import { BookingService } from '../services/booking.service.js';
+import { supabase } from '../config/supabase.js';
 
 const router = express.Router();
+
+/**
+ * @desc Get my bookings (Customer)
+ * @route GET /api/bookings/me
+ */
+router.get('/me', authenticate, async (req, res) => {
+    try {
+        const { data: bookings, error } = await supabase
+            .from('bookings')
+            .select(`
+                *,
+                categories(name),
+                tasker:tasker_id(profiles(full_name))
+            `)
+            .eq('customer_id', req.user.userId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json({ data: bookings });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
 
 /**
  * @desc Create a new booking
  * @route POST /api/bookings
  */
-router.post('/', async (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   try {
-    // In production, customer_id comes from active auth session token middleware
-    const mock_customer_id = req.headers['x-user-id'] || 'c1234567-c123-c123-c123-c12345678900'; 
-    const booking = await BookingService.createBooking(mock_customer_id, req.body);
+    const booking = await BookingService.createBooking(req.user.userId, req.body);
     
     res.status(201).json({
       message: 'Booking request created successfully',
@@ -27,7 +50,7 @@ router.post('/', async (req, res) => {
  * @desc Transition booking status
  * @route PATCH /api/bookings/:id/status
  */
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', authenticate, async (req, res) => {
     const { status } = req.body;
     try {
         const updated = await BookingService.transitionStatus(req.params.id, status);
@@ -41,7 +64,7 @@ router.patch('/:id/status', async (req, res) => {
  * @desc Cancel a booking (Triggers Refund Policy)
  * @route POST /api/bookings/:id/cancel
  */
-router.post('/:id/cancel', async (req, res) => {
+router.post('/:id/cancel', authenticate, async (req, res) => {
     const { reason } = req.body;
     try {
         const result = await BookingService.cancelBooking(req.params.id, reason);
@@ -59,10 +82,9 @@ router.post('/:id/cancel', async (req, res) => {
  * @desc Raise a dispute for a booking
  * @route POST /api/bookings/:id/dispute
  */
-router.post('/:id/dispute', async (req, res) => {
+router.post('/:id/dispute', authenticate, async (req, res) => {
     const { reason, evidence_urls } = req.body;
-    // In production, user_id comes from auth middleware
-    const user_id = req.headers['x-user-id'] || 'fake-user-id'; 
+    const user_id = req.user.userId; 
     try {
         const { DisputeService } = await import('../services/dispute.service.js');
         const dispute = await DisputeService.raiseDispute(req.params.id, user_id, reason, evidence_urls);
@@ -76,8 +98,8 @@ router.post('/:id/dispute', async (req, res) => {
  * @desc Report a Tasker No-Show (Happiness Guarantee Trigger)
  * @route POST /api/bookings/:id/report-no-show
  */
-router.post('/:id/report-no-show', async (req, res) => {
-    const user_id = req.headers['x-user-id'] || 'fake-user-id';
+router.post('/:id/report-no-show', authenticate, async (req, res) => {
+    const user_id = req.user.userId;
     try {
         const { DisputeService } = await import('../services/dispute.service.js');
         const result = await DisputeService.reportNoShow(req.params.id, user_id);
@@ -87,7 +109,7 @@ router.post('/:id/report-no-show', async (req, res) => {
     }
 });
 
-router.patch('/:id/reschedule', async (req, res) => {
+router.patch('/:id/reschedule', authenticate, async (req, res) => {
     const { scheduled_at } = req.body;
     try {
         const result = await BookingService.rescheduleBooking(req.params.id, scheduled_at);
@@ -101,7 +123,7 @@ router.patch('/:id/reschedule', async (req, res) => {
  * @desc Get available jobs for board
  * @route GET /api/bookings/available
  */
-router.get('/available', async (req, res) => {
+router.get('/available', authenticate, async (req, res) => {
     try {
         const jobs = await BookingService.getAvailableJobs();
         res.json({ data: jobs });
@@ -114,7 +136,7 @@ router.get('/available', async (req, res) => {
  * @desc Get tasker dashboard stats
  * @route GET /api/bookings/stats/:taskerId
  */
-router.get('/stats/:taskerId', async (req, res) => {
+router.get('/stats/:taskerId', authenticate, async (req, res) => {
     try {
         const stats = await BookingService.getTaskerStats(req.params.taskerId);
         res.json({ data: stats });

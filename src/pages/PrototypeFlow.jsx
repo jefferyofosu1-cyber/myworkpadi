@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-/* ── FONTS ── */
+/* --- FONTS --- */
 const Fonts = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
@@ -206,7 +206,7 @@ const Fonts = () => (
   `}</style>
 );
 
-/* ── TOKENS ── */
+/* --- TOKENS --- */
 const G = {
   green: "#0A6E4A", greenLight: "#12A06B", greenDeep: "#064D34",
   greenPale: "#E8F5EF", gold: "#E8A020", goldPale: "#FDF4E3",
@@ -217,7 +217,7 @@ const G = {
 const FD = "'Syne', sans-serif";
 const FB = "'DM Sans', sans-serif";
 
-/* ── ICONS (Purged Emojis) ── */
+/* --- ICONS (Purged Emojis) --- */
 const Icons = {
   Bell: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
   Search: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
@@ -242,7 +242,7 @@ const Icons = {
   ArrowLeft: ({ size = 18 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>,
 };
 
-/* ── SHARED COMPONENTS ── */
+/* --- SHARED COMPONENTS --- */
 const StatusBar = ({ light = false }) => (
   <div className="status-bar" style={{ background: "inherit" }}>
     <span style={{ fontFamily: FB, fontWeight: 700, fontSize: 15, color: light ? G.white : G.slate }}>9:41</span>
@@ -294,7 +294,7 @@ const StepBar = ({ step, total, label }) => (
   </div>
 );
 
-/* ── SCREEN DEFINITIONS ── */
+/* --- SCREEN DEFINITIONS --- */
 
 // SCREEN 0: Phone number entry (Login)
 const Screen0_Login = ({ onNext }) => {
@@ -463,7 +463,7 @@ const Screen3_ServiceDetail = ({ service, onNext, onBack }) => (
         </div>
         <div style={{ background: G.gold + "33", borderRadius: 20, padding: "5px 12px", border: `1px solid ${G.gold}44`, color: G.gold, display: "flex", alignItems: "center", gap: 4 }}>
           <Icons.Star />
-          <span style={{ fontFamily: FB, fontSize: 12, fontWeight: 700 }}>4.9 · 312 jobs</span>
+          <span style={{ fontFamily: FB, fontSize: 12, fontWeight: 700 }}>4.9 - 312 jobs</span>
         </div>
       </div>
     </div>
@@ -713,9 +713,9 @@ const Screen7_Tasker = ({ onNext, onBack }) => {
                       <Icons.Star />
                       <span style={{ fontFamily: FB, fontSize: 12, fontWeight: 700 }}>{t.rating}</span>
                     </div>
-                    <span style={{ fontFamily: FB, fontSize: 12, color: G.mist }}>·</span>
+                    <span style={{ fontFamily: FB, fontSize: 12, color: G.mist }}>-</span>
                     <span style={{ fontFamily: FB, fontSize: 12, color: G.steel }}>{t.jobs} jobs</span>
-                    <span style={{ fontFamily: FB, fontSize: 12, color: G.mist }}>·</span>
+                    <span style={{ fontFamily: FB, fontSize: 12, color: G.mist }}>-</span>
                     <span style={{ fontFamily: FB, fontSize: 12, color: G.slate, fontWeight: 700 }}>{t.price}</span>
                   </div>
                 </div>
@@ -849,7 +849,7 @@ const Screen10_Tracking = ({ onNext, onBack }) => {
           </div>
           <div style={{ position: "absolute", top: 18, left: 18, background: "rgba(255,255,255,0.95)", borderRadius: 16, padding: "14px 18px", backdropFilter: "blur(12px)", boxShadow: "0 8px 16px rgba(0,0,0,0.1)" }}>
             <p style={{ fontFamily: FD, fontWeight: 800, fontSize: 24, color: G.green }}>{eta} min</p>
-            <p style={{ fontFamily: FB, fontSize: 12, color: G.steel, fontWeight: 600 }}>ETA • Arriving soon</p>
+            <p style={{ fontFamily: FB, fontSize: 12, color: G.steel, fontWeight: 600 }}>ETA - Arriving soon</p>
           </div>
         </div>
         <div style={{ padding: "24px", position: "relative", marginTop: -24, background: G.white, borderRadius: "28px 28px 0 0", boxShadow: "0 -10px 40px rgba(0,0,0,0.05)" }}>
@@ -909,7 +909,7 @@ const Screen11_Quote = ({ onNext, onBack }) => {
             <div style={{ padding: "14px 20px", background: "#FAFAFA", animation: "slideDown 0.2s ease" }}>
               {[["Refrigerant R410A", "120"], ["Filter kit", "45"], ["Pipe clips", "35"]].map(([item, cost], i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontFamily: FB, fontSize: 12, color: G.steel }}>• {item}</span>
+                  <span style={{ fontFamily: FB, fontSize: 12, color: G.steel }}>- {item}</span>
                   <span style={{ fontFamily: FB, fontSize: 12, color: G.slate, fontWeight: 700 }}>GHS {cost}</span>
                 </div>
               ))}
@@ -966,7 +966,7 @@ const Screen12_InProgress = ({ onNext, onBack }) => {
         ))}
         <div style={{ background: G.greenPale, borderRadius: 14, padding: "14px", border: `1px solid ${G.green}22`, marginTop: 10 }}>
           <p style={{ fontFamily: FB, fontSize: 13, color: G.green, fontWeight: 700, marginBottom: 4 }}>Receipt uploaded</p>
-          <p style={{ fontFamily: FB, fontSize: 12, color: G.steel }}>Part purchase verified • GHS 200</p>
+          <p style={{ fontFamily: FB, fontSize: 12, color: G.steel }}>Part purchase verified - GHS 200</p>
         </div>
       </div>
       <div style={{ padding: "14px 20px", background: G.white, borderTop: `1px solid ${G.border}`, display: "flex", gap: 12 }}>
@@ -1050,7 +1050,7 @@ const Screen14_Complete = ({ onNext }) => (
   </div>
 );
 
-/* ── SCREEN REGISTRY ── */
+/* --- SCREEN REGISTRY --- */
 const SCREENS = [
   Screen0_Login, Screen1_OTP, Screen2_Home, Screen3_ServiceDetail,
   Screen4_Describe, Screen5_DateTime, Screen6_Address, Screen7_Tasker,
@@ -1065,7 +1065,7 @@ const SCREEN_LABELS = [
   "Work Mode", "Review", "Finish",
 ];
 
-/* ── DESKTOP WRAPPER ── */
+/* --- DESKTOP WRAPPER --- */
 export default function PrototypeFlow() {
   const [screen, setScreen] = useState(0);
   const [service, setService] = useState({ abbr: "AC", name: "AC Repair & Servicing", type: "assessment", price: "GHS 25" });

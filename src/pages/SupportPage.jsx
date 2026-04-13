@@ -76,7 +76,7 @@ export default function SupportPage() {
            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: G.gold }} />
            <h3 style={{ fontFamily: FH, fontWeight: 800, fontSize: 32, color: G.black, marginBottom: 16 }}>The TaskGH Happiness Guarantee</h3>
            <p style={{ fontFamily: FB, fontSize: 18, color: G.steel, lineHeight: 1.75, maxWidth: 640, margin: "0 auto" }}>
-              If you're not satisfied with a job, we'll send another Tasker to fix it for free — or refund your money in full. Your peace of mind is our highest priority.
+              If you're not satisfied with a job, we'll send another Tasker to fix it for free - or refund your money in full. Your peace of mind is our highest priority.
            </p>
         </div>
       </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useBooking } from '../BookingContext';
 import { G, FB, FD, StatusBar } from './shared';
 import { api } from '../../../utils/api';
+import { ArrowRight } from 'lucide-react';
 
 export default function Screen0_Login() {
     const { goNext, setBookingData } = useBooking();
@@ -38,13 +39,12 @@ export default function Screen0_Login() {
                         <p style={{ fontFamily: FB, fontWeight: 600, fontSize: 14, color: G.slate, marginBottom: 12 }}>Enter your phone number to continue</p>
                         <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
                             <div style={{ background: G.cloud, borderRadius: 14, border: `1.5px solid ${G.border}`, padding: "14px 14px", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
-                                <span style={{ fontSize: 16 }}>🇬🇭</span>
                                 <span style={{ fontFamily: FB, fontWeight: 600, fontSize: 14, color: G.slate }}>+233</span>
                             </div>
                             <input className="input" placeholder="0XX XXX XXXX" value={phone} onChange={e => setPhone(e.target.value)} style={{ flex: 1, fontSize: 16 }} />
                         </div>
                         <button className="btn btn-green" onClick={handleNext} disabled={phone.length < 9}>
-                            {loading ? <div style={{ width: 20, height: 20, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: G.white, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> : "Send OTP →"}
+                            {loading ? <div style={{ width: 20, height: 20, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: G.white, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> : <span style={{ display: "flex", alignItems: "center", gap: 8 }}>Send OTP <ArrowRight size={18} /></span>}
                         </button>
                         <p style={{ fontFamily: FB, fontSize: 11, color: G.mist, textAlign: "center", marginTop: 10 }}>We'll send a code via SMS</p>
                     </div>

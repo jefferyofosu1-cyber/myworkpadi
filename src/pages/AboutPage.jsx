@@ -38,7 +38,7 @@ export default function AboutPage() {
                   <div style={{ fontFamily: FH, fontWeight: 800, fontSize: 14, color: G.gold, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 16 }}>Mission</div>
                   <h3 style={{ fontFamily: FH, fontWeight: 800, fontSize: 26, marginBottom: 16 }}>Locally Rooted Excellence</h3>
                   <p style={{ fontFamily: FB, fontSize: 16, opacity: 0.9, lineHeight: 1.75 }}>
-                     We understand the nuances of Accra — from the importance of materials transparency to the convenience of MoMo. TaskGH isn't just an app; it's a commitment to our community.
+                     We understand the nuances of Accra - from the importance of materials transparency to the convenience of MoMo. TaskGH isn't just an app; it's a commitment to our community.
                   </p>
                </div>
                <div style={{ position: "absolute", top: 20, left: 20, right: -10, bottom: -10, border: `3px solid ${G.gold}`, borderRadius: 32, zIndex: 1 }} />

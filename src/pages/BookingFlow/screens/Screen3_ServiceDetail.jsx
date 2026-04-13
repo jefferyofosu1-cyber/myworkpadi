@@ -51,7 +51,7 @@ export default function Screen3_ServiceDetail() {
                 </div>
 
                 <button className="btn btn-green" onClick={goNext} style={{ position: "fixed", bottom: 24, left: "5%", width: "90%", zIndex: 10 }}>
-                    Book Service Now →
+                    Book Service Now
                 </button>
             </div>
         </div>

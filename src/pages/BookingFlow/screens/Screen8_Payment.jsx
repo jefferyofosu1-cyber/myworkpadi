@@ -8,8 +8,8 @@ export default function Screen8_Payment() {
 
     const providers = [
         { id: "mtn", name: "MTN MoMo", icon: "https://upload.wikimedia.org/wikipedia/commons/9/93/MTN_Logo.svg" },
-        { id: "telecel", name: "Telecel Cash", icon: "https://upload.wikimedia.org/wikipedia/commons/e/e1/Telecel_Logo.svg" },
-        { id: "airteltigo", name: "AirtelTigo Money", icon: "https://upload.wikimedia.org/wikipedia/en/3/3a/AirtelTigo_logo.png" }
+        { id: "telecel", name: "Telecel Cash", icon: "https://upload.wikimedia.org/wikipedia/commons/e/e0/Telecel_Logo.svg" },
+        { id: "at", name: "AT Money", icon: "https://upload.wikimedia.org/wikipedia/commons/2/23/AT_logo_Ghana.png" }
     ];
 
     const amountGHS = service.type === "assessment" ? 25.00 : 0.00;
@@ -74,7 +74,7 @@ export default function Screen8_Payment() {
                 </div>
 
                 <button className="btn btn-green" onClick={handlePay} disabled={isProcessing} style={{ position: "fixed", bottom: 24, left: "5%", width: "90%", zIndex: 10 }}>
-                    {isProcessing ? "Awaiting MoMo Prompt..." : `Pay GHS ${amountGHS.toFixed(2)} with MoMo →`}
+                    {isProcessing ? "Awaiting MoMo Prompt..." : `Pay GHS ${amountGHS.toFixed(2)} with MoMo`}
                 </button>
             </div>
         </div>

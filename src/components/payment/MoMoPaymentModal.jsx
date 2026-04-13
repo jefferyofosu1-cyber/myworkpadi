@@ -46,27 +46,22 @@ export default function MoMoPaymentModal({ amount, onClose, onSuccess }) {
               <div className="momo-form-group">
                 <label>Select Provider</label>
                 <div className="provider-grid">
-                  <button 
-                    type="button"
-                    className={`provider-btn ${provider === 'MTN' ? 'active' : ''}`}
-                    onClick={() => setProvider('MTN')}
-                  >
-                    MTN
-                  </button>
-                  <button 
-                    type="button"
-                    className={`provider-btn ${provider === 'VODAFONE' ? 'active' : ''}`}
-                    onClick={() => setProvider('VODAFONE')}
-                  >
-                    Telecel
-                  </button>
-                  <button 
-                    type="button"
-                    className={`provider-btn ${provider === 'AIRTELTIGO' ? 'active' : ''}`}
-                    onClick={() => setProvider('AIRTELTIGO')}
-                  >
-                    AT
-                  </button>
+                  {[
+                    { id: 'MTN', name: 'MTN', color: '#F59E0B', icon: 'https://upload.wikimedia.org/wikipedia/commons/9/93/MTN_Logo.svg' },
+                    { id: 'TELECEL', name: 'Telecel', color: '#EF4444', icon: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Telecel_Logo.svg' },
+                    { id: 'AT', name: 'AT', color: '#3B82F6', icon: 'https://upload.wikimedia.org/wikipedia/commons/2/23/AT_logo_Ghana.png' }
+                  ].map(p => (
+                    <button 
+                      key={p.id}
+                      type="button"
+                      className={`provider-btn ${provider === p.id ? 'active' : ''}`}
+                      onClick={() => setProvider(p.id)}
+                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 8px' }}
+                    >
+                      <img src={p.icon} alt={p.name} style={{ width: 24, height: 24, objectFit: 'contain' }} />
+                      <span style={{ fontSize: 11, fontWeight: 600 }}>{p.name}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 

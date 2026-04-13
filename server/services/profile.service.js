@@ -99,5 +99,51 @@ export class ProfileService {
     console.log(`[Admin Notification] Tasker ${userId} is ready for vetting.`);
     
     return data;
+  /**
+   * Fetches a full profile by ID.
+   */
+  static async getProfileById(userId) {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) throw new Error(`Fetch failed: ${error.message}`);
+    return profile;
+  /**
+   * Fetches all active, verified taskers for discovery.
+   */
+  static async getActiveTaskers() {
+    const { data: taskers, error } = await supabase
+      .from('tasker_profiles')
+      .select(`
+        id,
+        hourly_rate,
+        is_verified,
+        onboarding_status,
+        is_available,
+        skills,
+        profiles!inner (
+          full_name,
+          residential_area,
+          phone_number
+        )
+      `)
+      .eq('is_verified', true)
+      .eq('onboarding_status', 'active')
+      .eq('is_available', true);
+
+    if (error) throw new Error(`Fetch taskers failed: ${error.message}`);
+    
+    return taskers.map(t => ({
+      id: t.id,
+      fullName: t.profiles.full_name,
+      residentialArea: t.profiles.residential_area,
+      hourlyRate: t.hourly_rate,
+      skills: t.skills || [],
+      rating: 4.9, // Mock rating until we have review logic
+      totalJobs: 124 // Mock jobs until we have booking count logic
+    }));
   }
 }

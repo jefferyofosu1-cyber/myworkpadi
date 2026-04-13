@@ -1,5 +1,5 @@
-import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './contexts/AuthContext'
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
 
@@ -16,6 +16,10 @@ import BookingFlow from './pages/BookingFlow'
 import AuthFlow from './pages/AuthFlow'
 import PublicTaskerProfile from './pages/PublicTaskerProfile'
 import PrototypeFlow from './pages/PrototypeFlow'
+import AdminDashboard from './pages/AdminDashboard'
+import CustomerDashboard from './pages/CustomerDashboard'
+import CustomerAppExpansion from './pages/CustomerAppExpansion'
+import RemainingPages from './pages/RemainingPages'
 
 // Tasker Dashboard
 import TaskerLayout from './components/layout/TaskerLayout'
@@ -34,8 +38,9 @@ const MainLayout = ({ children }) => (
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="app">
-        <Routes>
+      <AuthProvider>
+        <div className="app">
+          <Routes>
           {/* Public Customer Routes */}
           <Route path="/" element={<MainLayout><LandingPage /></MainLayout>} />
           <Route path="/services" element={<MainLayout><ServicesPage /></MainLayout>} />
@@ -50,6 +55,10 @@ export default function App() {
           <Route path="/signup" element={<MainLayout><AuthFlow /></MainLayout>} />
           <Route path="/login" element={<MainLayout><AuthFlow /></MainLayout>} />
           <Route path="/prototype" element={<PrototypeFlow />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/explore" element={<CustomerDashboard />} />
+          <Route path="/app" element={<CustomerAppExpansion />} />
+          <Route path="/screens" element={<RemainingPages />} />
           
           {/* Tasker Dashboard Routes */}
           <Route path="/tasker" element={<TaskerLayout />}>

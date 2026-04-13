@@ -26,10 +26,10 @@ export class PayoutService {
    * Releases specific funds to a tasker via Paystack Transfers.
    */
   static async initiatePayout(bookingId, amount, type = 'labor', note = '') {
-    // 1. Fetch Tasker MoMo details
+    // 1. Fetch Tasker MoMo details & Provider
     const { data: booking, error: bkErr } = await supabase
       .from('bookings')
-      .select('tasker_id, tasker_profiles(id, profiles(phone_number, momo_number))')
+      .select('tasker_id, tasker_profiles(id, profiles(phone_number, momo_number, momo_provider))')
       .eq('id', bookingId)
       .single();
 
@@ -37,12 +37,15 @@ export class PayoutService {
       throw new Error('Tasker details not found for payout');
     }
 
-    const taskerMomo = booking.tasker_profiles.profiles.momo_number || booking.tasker_profiles.profiles.phone_number;
+    const taskerData = booking.tasker_profiles.profiles;
+    const taskerMomo = taskerData.momo_number || taskerData.phone_number;
+    const provider = taskerData.momo_provider || 'MTN'; // Default to MTN or look up from phone prefix
+    
     const { net, commission } = this.calculatePayout(amount, type);
 
     console.log(`[Payout] Processing ${type} payout for Booking ${bookingId}: Gross: ${amount}, Net: ${net}, Comm: ${commission}`);
 
-    // 2. Record in Ledger (Idempotent)
+    // 2. Record in Ledger (Idempotent tracking of the release intent)
     const { error: ledgerErr } = await supabase.from('escrow_ledger').insert([
       {
         booking_id: bookingId,
@@ -58,40 +61,73 @@ export class PayoutService {
       }
     ]);
 
-    if (ledgerErr) throw new Error(`Ledger entry failed: ${ledgerErr.message}`);
+    if (ledgerErr) {
+        console.error('[Ledger Error]', ledgerErr.message);
+        // We continue anyway to ensure tasker gets paid,ledger can be synced.
+    }
 
     // 3. Trigger Real Paystack Transfer
-    if (PAYSTACK_SECRET_KEY) {
+    if (PAYSTACK_SECRET_KEY && PAYSTACK_SECRET_KEY !== 'sk_test_...') {
       try {
-        // Step A: Create Transfer Recipient (Mocked for brevity, usually cached)
-        // Step B: Initiate Transfer
-        const reference = `payout_${crypto.randomBytes(8).toString('hex')}`;
-        const response = await fetch('https://api.paystack.co/transfer', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
-            'Content-Type': 'application/json'
+        const { enqueuePayoutRetry } = await import('../queues/queues.js');
+        const axios = (await import('axios')).default;
+
+        // Step A: Create or Get Transfer Recipient
+        // In a real high-scale app, we would cache recipient_codes in tasker_profiles
+        const recipientRes = await axios.post(
+          'https://api.paystack.co/transferrecipient',
+          {
+            type: 'mobile_money',
+            name: `Tasker_${booking.tasker_id.slice(0, 8)}`,
+            account_number: taskerMomo,
+            bank_code: provider, // 'MTN', 'VOD', 'TGO'
+            currency: 'GHS'
           },
-          body: JSON.stringify({
+          { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
+        );
+
+        if (!recipientRes.data.status) {
+           throw new Error(`Recipient creation failed: ${recipientRes.data.message}`);
+        }
+
+        const recipientCode = recipientRes.data.data.recipient_code;
+
+        // Step B: Initiate Transfer
+        const transferRes = await axios.post(
+          'https://api.paystack.co/transfer',
+          {
             source: 'balance',
             amount: Math.round(net * 100),
-            recipient: taskerMomo, // In reality, this is a recipient_code from Step A
-            reason: `TaskGH Payout: ${type} for Job #${bookingId.slice(0, 8)}`,
-            reference: reference,
+            recipient: recipientCode,
+            reason: `TaskGH ${type} payout: #${bookingId.slice(0, 8)}`,
             currency: 'GHS'
-          })
-        });
+          },
+          { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
+        );
 
-        const data = await response.json();
-        if (!data.status) {
-          console.error('[Paystack Transfer Error]', data.message);
-          // In production, we'd queue this for retry or manual intervention
+        if (!transferRes.data.status) {
+          throw new Error(`Transfer initiation failed: ${transferRes.data.message}`);
         }
+
+        console.log(`[Payout Success] Transfer initiated: ${transferRes.data.data.transfer_code}`);
+        
       } catch (err) {
-        console.error('[Payout API Failure]', err.message);
+        console.error('[Payout API Failure] Enqueueing retry:', err.message);
+        
+        // 4. Fallback: Queue for retry with BullMQ
+        const { enqueuePayoutRetry } = await import('../queues/queues.js');
+        await enqueuePayoutRetry({
+            bookingId,
+            taskerId: booking.tasker_id,
+            amountGhs: net,
+            taskerMomo,
+            provider,
+            note: `Retry: ${type} payout for ${bookingId}`,
+            payoutType: type
+        }).catch(qErr => console.error('[Queue Error] Failed to enqueue retry:', qErr.message));
       }
     } else {
-      console.log(`[Live Mock] Payout of GHS ${net} initiated to ${taskerMomo}`);
+      console.log(`[Live Mock] Payout of GHS ${net} simulated to ${taskerMomo} (${provider})`);
     }
 
     return { success: true, netAmount: net };
@@ -111,25 +147,21 @@ export class PayoutService {
    * Releases the Final Completion Payment (Process 3 - Completion payment 50%)
    */
   static async releaseFinalPayout(bookingId) {
-    // For fixed jobs, this is the full amount minus commission
-    // For assessment jobs, this is the remaining 50% labor
     const { data: booking } = await supabase.from('bookings').select('quoted_price, b_type').eq('id', bookingId).single();
     if (!booking || !booking.quoted_price) return;
 
     let payoutAmount = booking.quoted_price;
     
     if (booking.b_type === 'assessment') {
-       // Fetch the approved quote to find the labor portion
        const { data: quote } = await supabase.from('quotes').select('labor_cost').eq('booking_id', bookingId).eq('status', 'approved').single();
        if (quote) {
-         // In assessment flow, 50% deposit was already charged. Payout is the remaining labor.
-         // Actually, if 50% was charged, and materials were released immediately...
-         // The remaining Escrow balance is the Labor portion (minus what was already released if any).
          payoutAmount = quote.labor_cost;
        }
     }
 
+    const { BookingService } = await import('./booking.service.js');
     const result = await this.initiatePayout(bookingId, payoutAmount, 'labor', 'Final Completion Release');
+    
     if (result.success) {
         await BookingService.transitionStatus(bookingId, 'paid').catch(e => console.error("Final Status Error:", e));
     }

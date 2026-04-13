@@ -1,6 +1,7 @@
 import React from 'react';
 import { useBooking } from '../BookingContext';
 import { G, FB, FD, StatusBar, BackBtn, StepBar } from './shared';
+import { Clock } from 'lucide-react';
 
 export default function Screen5_DateTime() {
     const { goNext, goBack, bookingData, setBookingData } = useBooking();
@@ -47,7 +48,9 @@ export default function Screen5_DateTime() {
                 </div>
 
                 <div style={{ background: G.cloud, borderRadius: 16, padding: "20px", display: "flex", alignItems: "center", gap: 14 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: G.white, display: "flex", alignItems: "center", justifyCenter: "center", fontSize: 20 }}>⏰</div>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: G.white, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Clock size={20} color={G.green} />
+                    </div>
                     <div>
                         <p style={{ fontFamily: FB, fontSize: 14, color: G.slate, fontWeight: 600 }}>Arrival Window</p>
                         <p style={{ fontFamily: FB, fontSize: 12, color: G.mist }}>Professional will arrive within 30 mins of selected time.</p>
@@ -55,7 +58,7 @@ export default function Screen5_DateTime() {
                 </div>
 
                 <button className="btn btn-green" onClick={goNext} style={{ position: "fixed", bottom: 24, left: "5%", width: "90%", zIndex: 10 }}>
-                    Confirm Time →
+                    Confirm Time
                 </button>
             </div>
         </div>

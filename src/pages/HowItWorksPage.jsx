@@ -21,7 +21,7 @@ export default function HowItWorksPage() {
             Book a Tasker in<br /><span style={{ color:G.gold }}>5 Easy Steps</span>
           </h1>
           <p style={{ fontFamily:FB, fontSize:16, color:"rgba(255,255,255,0.7)", lineHeight:1.7 }}>
-            From opening the app to job done — every step is safe, transparent, and in your control.
+            From opening the app to job done - every step is safe, transparent, and in your control.
           </p>
         </div>
       </div>
@@ -77,7 +77,7 @@ export default function HowItWorksPage() {
             <div style={{ display:"flex", gap:12, marginTop:32 }}>
               {active > 0 && <button className="btn-outline" onClick={() => setActive(active-1)} style={{ flex:1, padding: '14px' }}>Previous</button>}
               {active < STEPS_DATA.length-1
-                ? <button className="btn-primary" onClick={() => setActive(active+1)} style={{ flex:2, padding: '14px' }}>Continue →</button>
+                ? <button className="btn-primary" onClick={() => setActive(active+1)} style={{ flex:2, padding: '14px' }}>Continue</button>
                 : <button className="btn-primary" style={{ flex:2, padding: '14px' }}>Book Now</button>
               }
             </div>
