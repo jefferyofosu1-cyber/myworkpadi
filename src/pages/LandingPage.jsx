@@ -19,18 +19,18 @@ const G = {
   greenPale: ThemeG.greenPale,
 };
 
-const FH = "'Space Grotesk', sans-serif";
-const FB = "'Inter', sans-serif";
+const FH = "'Outfit', sans-serif";
+const FB = "'Plus Jakarta Sans', sans-serif";
 
 /* --- DATA (Themed) --- */
 const SERVICES = [
-  { abbr:"AC",  color:G.gold,  name:"AC Repair",        type:"assessment", price:"GHS 25",  popular:true  },
-  { abbr:"EL",  color:G.gold,  name:"Electrical",        type:"assessment", price:"GHS 25",  popular:false },
-  { abbr:"PL",  color:G.gold,  name:"Plumbing",          type:"assessment", price:"GHS 25",  popular:true  },
+  { abbr:"AC",  color:G.gold,  name:"AC Repair",        type:"assessment", price:"GHS 300", popular:true  },
+  { abbr:"EL",  color:G.gold,  name:"Electrical",        type:"assessment", price:"GHS 300", popular:false },
+  { abbr:"PL",  color:G.gold,  name:"Plumbing",          type:"assessment", price:"GHS 300", popular:true  },
   { abbr:"CL",  color:G.gold,  name:"House Cleaning",    type:"fixed",      price:"GHS 120", popular:false },
-  { abbr:"GR",  color:G.gold,  name:"Generator Repair",  type:"assessment", price:"GHS 25",  popular:false },
+  { abbr:"GR",  color:G.gold,  name:"Generator Repair",  type:"assessment", price:"GHS 300", popular:false },
   { abbr:"PT",  color:G.gold,  name:"Polytank Cleaning", type:"fixed",      price:"GHS 80",  popular:true  },
-  { abbr:"PA",  color:G.gold,  name:"Painting",          type:"assessment", price:"GHS 25",  popular:false },
+  { abbr:"PA",  color:G.gold,  name:"Painting",          type:"assessment", price:"GHS 300", popular:false },
   { abbr:"FU",  color:G.gold,  name:"Fumigation",        type:"fixed",      price:"GHS 150", popular:false },
 ];
 

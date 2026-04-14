@@ -41,7 +41,7 @@ import {
 /* --- FONTS & GLOBALS --- */
 const Fonts = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body { -webkit-font-smoothing: antialiased; }
@@ -195,8 +195,8 @@ const G = {
   red: "#EF4444", redPale: "#FEF2F2", blue: "#3B82F6", bluePale: "#EFF6FF",
   purple: "#8B5CF6", purplePale: "#F5F3FF",
 };
-const FD = "'Syne', sans-serif";
-const FB = "'DM Sans', sans-serif";
+const FD = "'Outfit', sans-serif";
+const FB = "'Plus Jakarta Sans', sans-serif";
 const FM = "'JetBrains Mono', monospace";
 
 /* --- SHARED COMPONENTS --- */
@@ -653,11 +653,11 @@ const ProfilePage = ({ tasker }) => {
                 <p style={{ fontFamily: FD, fontWeight: 700, fontSize: 16, color: G.slate, marginBottom: 16 }}>Services Offered</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   {[
-                    { icon: <Snowflake size={20} />, name: "AC Repair & Diagnosis", type: "Assessment", price: "GHS 25 assessment + quote" },
+                    { icon: <Snowflake size={20} />, name: "AC Repair & Diagnosis", type: "Assessment", price: "GHS 300 assessment + quote" },
                     { icon: <Snowflake size={20} />, name: "AC Gas Recharge (R410A)", type: "Fixed", price: "GHS 180-220" },
                     { icon: <Snowflake size={20} />, name: "AC Deep Clean & Service", type: "Fixed", price: "GHS 120" },
-                    { icon: <Zap size={20} />, name: "Electrical Fault Finding", type: "Assessment", price: "GHS 25 assessment + quote" },
-                    { icon: <Briefcase size={20} />, name: "Generator Repair", type: "Assessment", price: "GHS 25 assessment + quote" },
+                    { icon: <Zap size={20} />, name: "Electrical Fault Finding", type: "Assessment", price: "GHS 300 assessment + quote" },
+                    { icon: <Briefcase size={20} />, name: "Generator Repair", type: "Assessment", price: "GHS 300 assessment + quote" },
                   ].map((svc, i, arr) => (
                     <div key={i} style={{ display: "flex", gap: 14, alignItems: "center", padding: "14px 0", borderBottom: i < arr.length - 1 ? `1px solid ${G.border}` : "none" }}>
                       <div style={{ width: 40, height: 40, borderRadius: 12, background: G.greenPale, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{svc.icon}</div>
@@ -856,7 +856,7 @@ const ProfilePage = ({ tasker }) => {
             </div>
             <div style={{ display: "flex", flex: "column", gap: 14, marginBottom: 20 }}>
               <div style={{ marginBottom: 14 }}><label style={{ fontFamily: FB, fontSize: 13, fontWeight: 600, color: G.steel, display: "block", marginBottom: 7 }}>Select service</label>
-                <select className="input"><option>AC Repair & Diagnosis (Assessment - GHS 25)</option><option>AC Gas Recharge (Fixed - GHS 180)</option><option>Electrical Fault (Assessment - GHS 25)</option></select>
+                <select className="input"><option>AC Repair & Diagnosis (Assessment - GHS 300)</option><option>AC Gas Recharge (Fixed - GHS 180)</option><option>Electrical Fault (Assessment - GHS 300)</option></select>
               </div>
               <div style={{ marginBottom: 14 }}><label style={{ fontFamily: FB, fontSize: 13, fontWeight: 600, color: G.steel, display: "block", marginBottom: 7 }}>Preferred date & time</label>
                 <input className="input" type="datetime-local" defaultValue="2026-04-12T14:00" />
@@ -867,7 +867,7 @@ const ProfilePage = ({ tasker }) => {
             </div>
             <div style={{ background: G.greenPale, borderRadius: 12, padding: 14, marginBottom: 20, display: "flex", gap: 8 }}>
               <LockKeyhole size={16} color={G.green} />
-              <p style={{ fontFamily: FB, fontSize: 12, color: G.green, lineHeight: 1.6 }}>Assessment fee of GHS 25 is held in escrow until you approve the quote. Credited toward your total.</p>
+              <p style={{ fontFamily: FB, fontSize: 12, color: G.green, lineHeight: 1.6 }}>Assessment fee of GHS 300 covers mapping, measurements, and analyzing the problem. It is held in escrow until you approve the quote and credited toward your total.</p>
             </div>
             <button className="btn btn-green" style={{ width: "100%", fontSize: 16 }}>Continue to Payment <ChevronRight size={18} /></button>
           </div>

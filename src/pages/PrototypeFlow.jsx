@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 /* --- FONTS --- */
 const Fonts = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body { -webkit-font-smoothing: antialiased; }
@@ -214,8 +214,8 @@ const G = {
   cloud: "#F7F9FC", border: "#EEF2F7", white: "#FFFFFF",
   error: "#EF4444", blue: "#3B82F6",
 };
-const FD = "'Syne', sans-serif";
-const FB = "'DM Sans', sans-serif";
+const FD = "'Outfit', sans-serif";
+const FB = "'Plus Jakarta Sans', sans-serif";
 
 /* --- ICONS (Purged Emojis) --- */
 const Icons = {
@@ -383,12 +383,12 @@ const Screen2_Home = ({ onNext, onSelectService }) => {
   const [cat, setCat] = useState("All");
   const categories = ["All", "Electrical", "Plumbing", "Cleaning", "Security"];
   const services = [
-    { abbr: "AC", name: "AC Repair", type: "assessment", price: "GHS 25", color: "#0EA5E9", hot: true },
-    { abbr: "EL", name: "Electrical", type: "assessment", price: "GHS 25", color: "#F59E0B", hot: false },
-    { abbr: "PL", name: "Plumbing", type: "assessment", price: "GHS 25", color: "#3B82F6", hot: true },
+    { abbr: "AC", name: "AC Repair", type: "assessment", price: "GHS 300", color: "#0EA5E9", hot: true },
+    { abbr: "EL", name: "Electrical", type: "assessment", price: "GHS 300", color: "#F59E0B", hot: false },
+    { abbr: "PL", name: "Plumbing", type: "assessment", price: "GHS 300", color: "#3B82F6", hot: true },
     { abbr: "CL", name: "Cleaning", type: "fixed", price: "GHS 120", color: "#10B981", hot: false },
     { abbr: "PK", name: "Polytank", type: "fixed", price: "GHS 80", color: "#06B6D4", hot: false },
-    { abbr: "PA", name: "Painting", type: "assessment", price: "GHS 25", color: "#EC4899", hot: false },
+    { abbr: "PA", name: "Painting", type: "assessment", price: "GHS 300", color: "#EC4899", hot: false },
   ];
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -484,8 +484,8 @@ const Screen3_ServiceDetail = ({ service, onNext, onBack }) => (
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <p style={{ fontFamily: FB, fontSize: 11, color: G.greenLight, fontWeight: 700, marginBottom: 4, textTransform: "uppercase" }}>Assessment Fee</p>
-            <p style={{ fontFamily: FD, fontWeight: 800, fontSize: 26, color: G.green }}>GHS 25</p>
-            <p style={{ fontFamily: FB, fontSize: 11, color: G.steel }}>Credited toward total job cost</p>
+            <p style={{ fontFamily: FD, fontWeight: 800, fontSize: 26, color: G.green }}>GHS 300</p>
+            <p style={{ fontFamily: FB, fontSize: 11, color: G.steel }}>Covers mapping & measurements</p>
           </div>
           <div style={{ width: 52, height: 52, borderRadius: 16, background: G.green, display: "flex", alignItems: "center", justifyContent: "center", color: G.white }}>
             <Icons.Shield />
@@ -756,12 +756,12 @@ const Screen8_Payment = ({ onNext, onBack }) => {
         <div style={{ background: G.white, borderRadius: 20, border: `1.5px solid ${G.border}`, overflow: "hidden", marginBottom: 24, boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
           <div style={{ padding: "18px 20px", borderBottom: `1px solid ${G.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontFamily: FB, fontWeight: 700, fontSize: 14, color: G.slate }}>AC Assessment visit</span>
-            <span style={{ fontFamily: FD, fontWeight: 800, fontSize: 18, color: G.green }}>GHS 25</span>
+            <span style={{ fontFamily: FD, fontWeight: 800, fontSize: 18, color: G.green }}>GHS 300</span>
           </div>
           <div style={{ padding: "14px 20px", background: G.greenPale, borderTop: `1px solid ${G.green}11` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ color: G.green }}><Icons.Shield /></div>
-              <p style={{ fontFamily: FB, fontSize: 12, color: G.green, fontWeight: 600 }}>Happiness Guarantee: GHS 25 held in escrow.</p>
+              <p style={{ fontFamily: FB, fontSize: 12, color: G.green, fontWeight: 600 }}>Happiness Guarantee: GHS 300 held in escrow.</p>
             </div>
           </div>
         </div>
@@ -794,7 +794,7 @@ const Screen8_Payment = ({ onNext, onBack }) => {
               <div style={{ width: 18, height: 18, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: G.white, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
               Processing...
             </div>
-          ) : <><Icons.Shield /> Pay GHS 25 Lock</>}
+          ) : <><Icons.Shield /> Pay GHS 300 Lock</>}
         </button>
       </div>
     </div>
@@ -1068,7 +1068,7 @@ const SCREEN_LABELS = [
 /* --- DESKTOP WRAPPER --- */
 export default function PrototypeFlow() {
   const [screen, setScreen] = useState(0);
-  const [service, setService] = useState({ abbr: "AC", name: "AC Repair & Servicing", type: "assessment", price: "GHS 25" });
+  const [service, setService] = useState({ abbr: "AC", name: "AC Repair & Servicing", type: "assessment", price: "GHS 300" });
   const goNext = () => setScreen(s => Math.min(s + 1, SCREENS.length - 1));
   const goBack = () => setScreen(s => Math.max(s - 1, 0));
   const goTo = (i) => setScreen(i);

@@ -8,12 +8,12 @@ export default function Screen2_Home() {
     
     const categories = ["All", "Electrical", "Plumbing", "Cleaning", "Security"];
     const services = [
-      { abbr: "AC", name: "AC Repair", type: "assessment", price: "GHS 25", color: "#0EA5E9", hot: true },
-      { abbr: "EL", name: "Electrical", type: "assessment", price: "GHS 25", color: "#F59E0B", hot: false },
-      { abbr: "PL", name: "Plumbing", type: "assessment", price: "GHS 25", color: "#3B82F6", hot: true },
+      { abbr: "AC", name: "AC Repair", type: "assessment", price: "GHS 300", color: "#0EA5E9", hot: true },
+      { abbr: "EL", name: "Electrical", type: "assessment", price: "GHS 300", color: "#F59E0B", hot: false },
+      { abbr: "PL", name: "Plumbing", type: "assessment", price: "GHS 300", color: "#3B82F6", hot: true },
       { abbr: "CL", name: "House Cleaning", type: "fixed", price: "GHS 120", color: "#10B981", hot: false },
       { abbr: "PT", name: "Polytank Cleaning", type: "fixed", price: "GHS 80", color: "#06B6D4", hot: false },
-      { abbr: "PA", name: "Painting", type: "assessment", price: "GHS 25", color: "#EC4899", hot: false },
+      { abbr: "PA", name: "Painting", type: "assessment", price: "GHS 300", color: "#EC4899", hot: false },
     ];
 
     const handleSelectService = (svc) => {

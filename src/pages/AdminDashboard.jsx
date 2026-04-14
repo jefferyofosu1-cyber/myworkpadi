@@ -32,7 +32,7 @@ import {
 /* --- FONTS --- */
 const Fonts = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;1,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { -webkit-font-smoothing: antialiased; }
 
@@ -83,7 +83,7 @@ const Fonts = () => (
       white-space: nowrap;
     }
     .data-table td {
-      padding: 13px 16px; font-family: 'DM Sans', sans-serif;
+      padding: 13px 16px; font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 13px; color: rgba(255,255,255,0.85);
       border-bottom: 1px solid rgba(255,255,255,0.04);
       vertical-align: middle;
@@ -93,7 +93,7 @@ const Fonts = () => (
     .btn {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 8px 16px; border-radius: 8px; border: none;
-      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;
       font-weight: 600; font-size: 13px; transition: all 0.15s;
       white-space: nowrap;
     }
@@ -194,8 +194,8 @@ const C = {
   purple: "#A78BFA", purplePale: "rgba(167,139,250,0.15)",
   text: "rgba(255,255,255,0.9)", textSoft: "rgba(255,255,255,0.6)", textMuted: "rgba(255,255,255,0.3)",
 };
-const FD = "'Syne', sans-serif";
-const FB = "'DM Sans', sans-serif";
+const FD = "'Outfit', sans-serif";
+const FB = "'Plus Jakarta Sans', sans-serif";
 const FM = "'JetBrains Mono', monospace";
 
 /* --- HELPERS --- */
@@ -254,7 +254,7 @@ const BOOKINGS_DATA = [
   { id: "BK-7841", customer: "Sandra A.", tasker: "Emmanuel K.", service: "AC Repair",       status: "IN_PROGRESS",  amount: "GHS 355", area: "East Legon", time: "Today 2:00 PM" },
   { id: "BK-7840", customer: "Kofi B.",   tasker: "Abena M.",   service: "House Cleaning",   status: "COMPLETED",    amount: "GHS 120", area: "Airport Area", time: "Today 10:00 AM" },
   { id: "BK-7839", customer: "Efua M.",   tasker: "Kwabena O.", service: "Plumbing",         status: "PAID",         amount: "GHS 180", area: "Cantonments", time: "Today 9:00 AM" },
-  { id: "BK-7838", customer: "Nana O.",   tasker: "-",          service: "Electrical",       status: "PENDING",      amount: "GHS 25",  area: "Spintex", time: "Today 3:00 PM" },
+  { id: "BK-7838", customer: "Nana O.",   tasker: "-",          service: "Electrical",       status: "PENDING",      amount: "GHS 300",  area: "Spintex", time: "Today 3:00 PM" },
   { id: "BK-7837", customer: "Aba K.",    tasker: "Ama D.",     service: "Fumigation",       status: "DEPOSIT_PAID", amount: "GHS 150", area: "Adenta", time: "Today 11:00 AM" },
   { id: "BK-7836", customer: "Joe A.",    tasker: "Kofi B.",    service: "Painting",         status: "QUOTED",       amount: "GHS 280", area: "Osu", time: "Yesterday" },
   { id: "BK-7823", customer: "Kofi B.",   tasker: "Samuel T.",  service: "Electrical",       status: "DISPUTED",     amount: "GHS 200", area: "Tema", time: "Yesterday" },

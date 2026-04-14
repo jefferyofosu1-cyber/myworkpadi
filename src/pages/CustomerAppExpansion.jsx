@@ -38,7 +38,7 @@ import {
 /* --- FONTS & GLOBAL STYLES --- */
 const Fonts = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body { -webkit-font-smoothing: antialiased; }
@@ -172,8 +172,8 @@ const G = {
   purple:"#8B5CF6", purplePale:"#F5F3FF",
   orange:"#F97316", orangePale:"#FFF7ED",
 };
-const FD = "'Syne', sans-serif";
-const FB = "'DM Sans', sans-serif";
+const FD = "'Outfit', sans-serif";
+const FB = "'Plus Jakarta Sans', sans-serif";
 const FM = "'JetBrains Mono', monospace";
 
 /* --- SHARED --- */
@@ -492,9 +492,9 @@ const NOTIF_DATA = [
    { id:1,  type:"payment",  icon:<CreditCard size={20} />, title:"Payment released to Emmanuel",      body:"GHS 312.40 has been sent to Emmanuel K.'s MTN MoMo for AC Repair job BK-7841.", time:"Just now",    unread:true,  badge:"Payment", badgeColor:G.green,  booking:"BK-7841" },
    { id:2,  type:"job",      icon:<CheckCircle size={20} />, title:"Job confirmed complete",             body:"You confirmed Emmanuel's AC Repair job is done. Would you like to leave a review?", time:"2 min ago",  unread:true,  badge:"Job done", badgeColor:G.green, booking:"BK-7841" },
    { id:3,  type:"alert",    icon:<MapPin size={20} />, title:"Emmanuel arrived at your location", body:"Your Tasker has arrived at 42 Okponglo Close, East Legon. Tap to confirm work start.", time:"18 min ago", unread:true,  badge:"Tracking", badgeColor:G.blue,  booking:"BK-7841" },
-   { id:4,  type:"quote",    icon:<MessageSquare size={20} />, title:"Quote ready for review",             body:"Emmanuel sent a quote of GHS 355 (Labour: GHS 180 + Materials: GHS 200 - Assessment: GHS 25). Tap to approve or decline.", time:"42 min ago", unread:true,  badge:"Quote",    badgeColor:G.gold,  booking:"BK-7841" },
+   { id:4,  type:"quote",    icon:<MessageSquare size={20} />, title:"Quote ready for review",             body:"Emmanuel sent a quote of GHS 355 (Labour: GHS 180 + Materials: GHS 200 - Assessment: GHS 300). Tap to approve or decline.", time:"42 min ago", unread:true,  badge:"Quote",    badgeColor:G.gold,  booking:"BK-7841" },
    { id:5,  type:"booking",  icon:<Wrench size={20} />, title:"Emmanuel accepted your job",         body:"Your AC Repair booking has been confirmed. Emmanuel will arrive at 2:00 PM today.", time:"1 hr ago",   unread:true,  badge:"Booking",  badgeColor:G.blue,  booking:"BK-7841" },
-   { id:6,  type:"payment",  icon:<Lock size={20} />, title:"Assessment fee held in escrow",      body:"GHS 25 is safely held. It will be credited toward your total when you approve the quote.", time:"1 hr ago",   unread:false, badge:"Escrow",   badgeColor:G.purple,booking:"BK-7841" },
+   { id:6,  type:"payment",  icon:<Lock size={20} />, title:"Assessment fee held in escrow",      body:"GHS 300 is safely held for mapping, measurements, and analysis. It will be credited toward your total when you approve the quote.", time:"1 hr ago",   unread:false, badge:"Escrow",   badgeColor:G.purple,booking:"BK-7841" },
    { id:7,  type:"booking",  icon:<Receipt size={20} />, title:"Booking BK-7841 created",            body:"AC Repair assessment booked for Today 2:00 PM with Emmanuel K. at East Legon.", time:"1 hr ago",   unread:false, badge:"Booking",  badgeColor:G.blue,  booking:"BK-7841" },
    { id:8,  type:"review",   icon:<Star size={20} />, title:"Rate your last job",                 body:"How did Abena M. do on your House Cleaning on Monday? Your review helps other families.", time:"2 days ago", unread:false, badge:"Review",   badgeColor:G.gold,  booking:"BK-7820" },
    { id:9,  type:"promo",    icon:<PartyPopper size={20} />, title:"Refer a friend, earn GHS 20",        body:"Share your referral code SANDRA20 and both you and your friend get GHS 20 off your next booking.", time:"3 days ago", unread:false, badge:"Promo",    badgeColor:G.orange,booking:null },
@@ -941,7 +941,7 @@ const OnboardingPage = () => {
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
                 {[
                   { type:"Fixed Price", color:G.green, icon:<Check size={16} />, desc:"You see the full price before booking. No surprises. Great for house cleaning, polytank cleaning, TV mounting, fumigation.", examples:["House Cleaning - GHS 120","Polytank Cleaning - GHS 80","Fumigation - GHS 150"] },
-                  { type:"Assessment Visit", color:G.gold, icon:<Receipt size={16} />, desc:"Tasker visits, inspects the problem, and sends you a quote. You approve before any work starts. Perfect for repairs.", examples:["AC Repair - GHS 25 assessment","Plumbing - GHS 25 assessment","Electrical - GHS 25 assessment"] },
+                  { type:"Assessment Visit", color:G.gold, icon:<Receipt size={16} />, desc:"Tasker visits, inspects the problem, maps out the solution and sends you a quote. You approve before any work starts.", examples:["AC Repair - GHS 300 assessment","Plumbing - GHS 300 assessment","Electrical - GHS 300 assessment"] },
                 ].map((t,i) => (
                   <div key={i} style={{ background:G.cloud, borderRadius:18, padding:22, border:`1.5px solid ${t.color}33`, borderTop:`3px solid ${t.color}` }}>
                     <p style={{ fontFamily:FD, fontWeight:700, fontSize:16, color:t.color, marginBottom:8 }}>{t.type}</p>

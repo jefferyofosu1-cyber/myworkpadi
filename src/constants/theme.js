@@ -22,5 +22,5 @@ export const G = {
 };
 
 // Font Families
-export const FH = "'Space Grotesk', sans-serif";
-export const FB = "'Inter', sans-serif";
+export const FH = "'Outfit', sans-serif";
+export const FB = "'Plus Jakarta Sans', sans-serif";

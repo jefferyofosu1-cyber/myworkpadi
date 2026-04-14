@@ -38,7 +38,7 @@ import {
 /* --- FONTS & GLOBALS -------------------------------------------------------- */
 const Fonts = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500;600&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body { -webkit-font-smoothing: antialiased; }
@@ -172,8 +172,8 @@ const G = {
   purple:"#8B5CF6", purplePale:"#F5F3FF",
   orange:"#F97316", orangePale:"#FFF7ED",
 };
-const FD = "'Syne',sans-serif";
-const FB = "'DM Sans',sans-serif";
+const FD = "'Outfit',sans-serif";
+const FB = "'Plus Jakarta Sans',sans-serif";
 const FM = "'JetBrains Mono',monospace";
 
 /* --- SHARED COMPONENTS ------------------------------------------------------- */
@@ -250,7 +250,7 @@ const ErrorsPage = () => {
       id:"payment-failed", label:"Payment Failed",
       icon:<CreditCard size={24} />, color:G.red,
       title:"Payment Didn't Go Through",
-      subtitle:"Your MTN MoMo charge for GHS 25 was not completed",
+      subtitle:"Your MTN MoMo charge for GHS 300 was not completed",
       body:"This can happen if you cancelled the MoMo prompt, had insufficient balance, or if the network timed out. Your booking is still saved - try paying again.",
       actions:[
         { label:"Try payment again", style:"btn-green" },
@@ -265,7 +265,7 @@ const ErrorsPage = () => {
       icon:<X size={24} />, color:G.mist,
       title:"Booking Cancelled",
       subtitle:"Booking BK-7841 has been cancelled",
-      body:"Your AC Repair booking has been cancelled. If you paid an assessment fee, a full refund of GHS 25 will be returned to your MTN MoMo within 2 business days.",
+      body:"Your AC Repair booking has been cancelled. If you paid an assessment fee, a full refund of GHS 300 will be returned to your MTN MoMo within 2 business days.",
       actions:[
         { label:"Book again", style:"btn-green" },
         { label:"Find a different Tasker", style:"btn-outline" },
@@ -1320,8 +1320,8 @@ const MobileShellPage = () => {
           <p style={{ fontFamily:FD,fontWeight:700,fontSize:15,color:G.slate,marginBottom:12 }}>Popular Services</p>
           <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20 }}>
             {[
-              { icon:<Clock size={24} />, n:"AC Repair", p:"GHS 25", hot:true },
-              { icon:<Wrench size={24} />, n:"Plumbing", p:"GHS 25", hot:true },
+              { icon:<Clock size={24} />, n:"AC Repair", p:"GHS 300", hot:true },
+              { icon:<Wrench size={24} />, n:"Plumbing", p:"GHS 300", hot:true },
               { icon:<Monitor size={24} />, n:"Cleaning", p:"GHS 120", hot:false },
               { icon:<Home size={24} />, n:"Polytank", p:"GHS 80", hot:false }
             ].map(s => (
@@ -1407,7 +1407,7 @@ const MobileShellPage = () => {
                 <p style={{ fontFamily:FD,fontWeight:700,fontSize:14,color:G.white,marginBottom:12 }}>Upcoming jobs</p>
                 {[
                   { ic: <Clock size={20} />, n: "AC Repair", c: "Sandra A.", t: "Today 2PM", p: "GHS 355" },
-                  { ic: <Zap size={20} />, n: "Electrical", c: "Kofi B.", t: "Fri 10AM", p: "GHS 25" }
+                  { ic: <Zap size={20} />, n: "Electrical", c: "Kofi B.", t: "Fri 10AM", p: "GHS 300" }
                 ].map(job => (
                   <div key={job.n} style={{ background:"rgba(255,255,255,0.06)",borderRadius:16,padding:16,marginBottom:10,border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer" }}>
                     <div style={{ display:"flex",gap:12,alignItems:"center" }}>

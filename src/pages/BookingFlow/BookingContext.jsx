@@ -16,7 +16,7 @@ export const BookingProvider = ({ children }) => {
         abbr: "AC", 
         name: "AC Repair & Servicing", 
         type: "assessment", 
-        price: "GHS 25" 
+        price: "GHS 300" 
     });
     
     const [bookingData, setBookingData] = useState({
