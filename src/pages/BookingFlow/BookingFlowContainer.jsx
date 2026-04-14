@@ -31,10 +31,22 @@ const BookingFlowContent = () => {
     const { screen } = useBooking();
     const CurrentScreen = SCREENS[screen];
 
+    // Screens 0 (Login), 1 (OTP), and 2 (Home/Services) are "Hero" screens
+    const isHeroScreen = screen <= 2;
+
+    if (isHeroScreen) {
+        return (
+            <div className="booking-flow-container hero-layout">
+                <div className="booking-flow-inner-fluid">
+                    <CurrentScreen />
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="booking-flow-container">
-            {/* The Phone Shell is removed per user request for a fluid responsive layout */}
-            <div className="booking-flow-inner">
+        <div className="booking-flow-container focused-layout" style={{ paddingTop: 80 }}>
+            <div className="booking-flow-inner-constrained">
                 <CurrentScreen />
             </div>
         </div>

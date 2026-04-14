@@ -11,8 +11,12 @@ export const G = {
   error: "#EF4444", blue: "#3B82F6",
 };
 
-export const FB = "'DM Sans', sans-serif";
-export const FD = "'Syne', sans-serif";
+export const FB = "'Plus Jakarta Sans', sans-serif";
+export const FD = "'Outfit', sans-serif";
+
+export const SectionLabel = ({ children, color = G.green }) => (
+  <div style={{ fontFamily:FB, fontSize:11, color, fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase", marginBottom:8 }}>{children}</div>
+);
 
 export const StatusBar = ({ light = false }) => (
   <div className="status-bar" style={{ background: "inherit" }}>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useBooking } from '../BookingContext';
-import { G, FB, FD, StatusBar } from './shared';
+import { G, FB, FD, SectionLabel } from './shared';
 import { api } from '../../../utils/api';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Zap, Heart } from 'lucide-react';
 
 export default function Screen0_Login() {
     const { goNext, setBookingData } = useBooking();
@@ -23,30 +23,87 @@ export default function Screen0_Login() {
     };
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", height: "100%", flex: 1 }}>
-            <StatusBar light />
-            <div style={{ flex: 1, background: `linear-gradient(170deg, ${G.greenDeep} 0%, ${G.green} 55%, #0D8559 100%)`, padding: "32px 24px 40px", display: "flex", flexDirection: "column", justifyContent: "flex-end", position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", top: -60, right: -60, width: 220, height: 220, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
-                <div style={{ position: "absolute", top: 80, left: -30, width: 140, height: 140, borderRadius: "50%", background: G.gold + "18" }} />
-                <div className="screen-enter">
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
-                        <svg width={40} height={40} viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="11" fill="rgba(255,255,255,0.2)" /><path d="M13 27L21 19" stroke={G.gold} strokeWidth="2.5" strokeLinecap="round" /><circle cx="24" cy="16" r="5" stroke="white" strokeWidth="2.2" fill="none" /><path d="M20 20L14.5 25.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" /><path d="M21 15.5L23 17.5L27 13.5" stroke={G.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                        <span style={{ fontFamily: FD, fontWeight: 800, fontSize: 24, color: G.white }}>TaskGH</span>
-                    </div>
-                    <h1 style={{ fontFamily: FD, fontWeight: 800, fontSize: 34, color: G.white, lineHeight: 1.15, marginBottom: 10, letterSpacing: "-0.02em" }}>Trusted Help<br />for Your Home</h1>
-                    <p style={{ fontFamily: FB, fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 1.65, marginBottom: 32 }}>Book vetted Taskers in Accra. Payments protected until you're satisfied.</p>
-                    <div style={{ background: G.white, borderRadius: 20, padding: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}>
-                        <p style={{ fontFamily: FB, fontWeight: 600, fontSize: 14, color: G.slate, marginBottom: 12 }}>Enter your phone number to continue</p>
-                        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-                            <div style={{ background: G.cloud, borderRadius: 14, border: `1.5px solid ${G.border}`, padding: "14px 14px", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
-                                <span style={{ fontFamily: FB, fontWeight: 600, fontSize: 14, color: G.slate }}>+233</span>
-                            </div>
-                            <input className="input" placeholder="0XX XXX XXXX" value={phone} onChange={e => setPhone(e.target.value)} style={{ flex: 1, fontSize: 16 }} />
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: G.gold, paddingTop: 80 }}>
+            <div style={{ padding: "80px 40px", flex: 1, position: "relative", overflow: "hidden" }}>
+                {/* Decorative Elements */}
+                <div style={{ position: "absolute", top: -80, right: -80, width: 300, height: 300, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
+                
+                <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 64, alignItems: "center", position: "relative" }}>
+                    {/* Left Column: Value Prop */}
+                    <div className="fade-up">
+                        <SectionLabel color={G.white}>Book a Professional</SectionLabel>
+                        <h1 style={{ fontFamily: FD, fontWeight: 800, fontSize: 48, color: G.black, marginBottom: 20, letterSpacing: "-0.03em" }}>
+                            Trusted Help.<br />Secured for You.
+                        </h1>
+                        <p style={{ fontFamily: FB, fontSize: 18, color: "rgba(0,0,0,0.65)", lineHeight: 1.7, marginBottom: 32, maxWidth: 480 }}>
+                            Join thousands of homeowners in Accra who trust TaskGH for reliable repairs, cleaning, and more. 
+                        </p>
+                        
+                        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                            {[
+                                { icon: <ShieldCheck size={20} />, text: "Payments held in Escrow" },
+                                { icon: <Zap size={20} />, text: "Vetted Professionals Only" },
+                                { icon: <Heart size={20} />, text: "Happiness Guarantee" }
+                            ].map((item, i) => (
+                                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                    <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(0,0,0,0.06)", display: "flex", alignItems: "center", justifyContent: "center", color: G.green }}>
+                                        {item.icon}
+                                    </div>
+                                    <span style={{ fontFamily: FB, fontSize: 16, fontWeight: 700, color: G.black }}>{item.text}</span>
+                                </div>
+                            ))}
                         </div>
-                        <button className="btn btn-green" onClick={handleNext} disabled={phone.length < 9}>
-                            {loading ? <div style={{ width: 20, height: 20, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: G.white, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> : <span style={{ display: "flex", alignItems: "center", gap: 8 }}>Send OTP <ArrowRight size={18} /></span>}
-                        </button>
-                        <p style={{ fontFamily: FB, fontSize: 11, color: G.mist, textAlign: "center", marginTop: 10 }}>We'll send a code via SMS</p>
+                    </div>
+
+                    {/* Right Column: CTA Card */}
+                    <div className="fade-up" style={{ background: G.white, borderRadius: 28, padding: 40, boxShadow: "0 24px 64px rgba(0,0,0,0.1)", border: `1px solid ${G.border}` }}>
+                        <h3 style={{ fontFamily: FD, fontWeight: 800, fontSize: 24, color: G.black, marginBottom: 12 }}>Get started now</h3>
+                        <p style={{ fontFamily: FB, fontSize: 15, color: G.steel, marginBottom: 28 }}>Secure your booking with your phone number.</p>
+                        
+                        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                            <div>
+                                <label style={{ display: "block", fontFamily: FB, fontSize: 11, fontWeight: 800, color: G.black, marginBottom: 8, letterSpacing: '0.05em' }}>PHONE NUMBER</label>
+                                <div style={{ display: "flex", gap: 12 }}>
+                                    <div style={{ padding: "14px 16px", borderRadius: 14, background: G.offWhite, color: G.steel, fontSize: 15, fontFamily: FB, fontWeight: 700, border: `1.5px solid ${G.border}` }}>+233</div>
+                                    <input 
+                                        className="input"
+                                        placeholder="0XX XXX XXXX" 
+                                        value={phone} 
+                                        onChange={e => setPhone(e.target.value)} 
+                                        style={{ flex: 1, padding: "14px 18px", borderRadius: 14, border: `1.5px solid ${G.border}`, fontFamily: FB, fontSize: 15, outline: 'none' }} 
+                                    />
+                                </div>
+                            </div>
+
+                            <button 
+                                className="btn btn-green" 
+                                onClick={handleNext} 
+                                disabled={phone.length < 9 || loading}
+                                style={{ padding: '16px', borderRadius: 14, fontSize: 16 }}
+                            >
+                                {loading ? (
+                                    <div style={{ width: 24, height: 24, border: "3px solid rgba(255,255,255,0.3)", borderTopColor: G.white, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                                ) : (
+                                    <span style={{ display: "flex", alignItems: "center", gap: 8 }}>Continue to OTP <ArrowRight size={18} /></span>
+                                )}
+                            </button>
+                            
+                            <p style={{ textAlign: "center", fontSize: 12, color: G.mist, fontFamily: FB, marginTop: 4 }}>
+                                We'll send a secure code via SMS to verify your account.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Bottom Proof Section */}
+            <div style={{ background: G.offWhite, padding: "60px 40px" }}>
+                <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
+                    <p style={{ fontFamily: FB, fontSize: 14, color: G.steel, marginBottom: 32, fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>Trusted by homeowners in these areas</p>
+                    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 40, opacity: 0.5 }}>
+                        {["East Legon", "Airport Hills", "Cantonments", "Osu", "Spintex", "Tema"].map(area => (
+                            <span key={area} style={{ fontFamily: FD, fontSize: 20, fontWeight: 800, color: G.black }}>{area}</span>
+                        ))}
                     </div>
                 </div>
             </div>

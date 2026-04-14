@@ -9,19 +9,29 @@
     width: 100%;
 }
 
-.booking-flow-inner {
+.booking-flow-inner-fluid {
     width: 100%;
-    max-width: 1200px;
     min-height: 100vh;
     background: #fff;
     position: relative;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 100px rgba(0,0,0,0.5);
 }
 
-@media (max-width: 768px) {
-    .booking-flow-inner {
+.booking-flow-inner-constrained {
+    width: 100%;
+    max-width: 500px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: #fff;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 80px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 500px) {
+    .booking-flow-inner-constrained {
         max-width: 100%;
         box-shadow: none;
     }

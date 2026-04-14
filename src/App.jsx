@@ -49,7 +49,7 @@ export default function App() {
           <Route path="/about" element={<MainLayout><AboutPage /></MainLayout>} />
           <Route path="/support" element={<MainLayout><SupportPage /></MainLayout>} />
           
-          <Route path="/booking" element={<BookingFlow />} />
+          <Route path="/booking" element={<MainLayout><BookingFlow /></MainLayout>} />
           <Route path="/profile/:id" element={<MainLayout><PublicTaskerProfile /></MainLayout>} />
           
           <Route path="/signup" element={<MainLayout><AuthFlow /></MainLayout>} />
