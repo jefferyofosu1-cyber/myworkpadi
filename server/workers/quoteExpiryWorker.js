@@ -4,7 +4,8 @@
  * Called via delayed job scheduled when a quote is created.
  */
 
-import { Worker } from 'bullmq';
+import pkg from 'bullmq';
+const { Worker } = pkg;
 import { redis } from '../config/redisClient.js';
 import { supabase } from '../config/supabase.js';
 import { enqueueNotification } from '../queues/queues.js';

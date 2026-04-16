@@ -5,7 +5,8 @@
  * After 3 failures: admin alert via WhatsApp.
  */
 
-import { Worker } from 'bullmq';
+import pkg from 'bullmq';
+const { Worker } = pkg;
 import { redis } from '../config/redisClient.js';
 import { supabase } from '../config/supabase.js';
 import dotenv from 'dotenv';

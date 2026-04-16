@@ -5,7 +5,8 @@
  * Concurrency: 5 parallel jobs
  */
 
-import { Worker } from 'bullmq';
+import pkg from 'bullmq';
+const { Worker } = pkg;
 import { redis } from '../config/redisClient.js';
 import { supabase } from '../config/supabase.js';
 import { messaging } from '../config/firebase.js';

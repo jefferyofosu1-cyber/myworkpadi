@@ -4,7 +4,8 @@
  * All queues share the same Redis connection.
  */
 
-import { Queue } from 'bullmq';
+import pkg from 'bullmq';
+const { Queue } = pkg;
 import { redis } from '../config/redisClient.js';
 
 const connection = redis;

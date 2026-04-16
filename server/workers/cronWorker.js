@@ -6,7 +6,8 @@
  * - Every day 8am GMT: daily revenue report to admin
  */
 
-import { Worker, QueueScheduler } from 'bullmq';
+import pkg from 'bullmq';
+const { Worker, QueueScheduler } = pkg;
 import { cronQueue } from '../queues/queues.js';
 import { redis } from '../config/redisClient.js';
 import { supabase } from '../config/supabase.js';
