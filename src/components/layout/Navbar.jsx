@@ -46,16 +46,19 @@ export default function Navbar() {
     setDropdown(null);
   }, [location.pathname]);
 
+  const isHome = location.pathname === '/';
+
   return (
     <>
       <nav style={{
         position:"fixed", top:0, left:0, right:0, zIndex:1000,
-        background: scrolled ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.85)",
-        backdropFilter:"blur(12px)",
-        borderBottom: scrolled ? `1px solid ${G.border}` : "1px solid transparent",
-        transition:"all 0.3s", padding:"0 40px"
+        background: scrolled ? "rgba(255,255,255,0.96)" : (isHome ? "transparent" : "rgba(255,255,255,0.85)"),
+        backdropFilter: scrolled ? "blur(12px)" : (isHome ? "none" : "blur(12px)"),
+        borderBottom: (scrolled && !isHome) ? `1px solid ${G.border}` : "1px solid transparent",
+        transition:"all 0.3s", padding:"0 40px",
+        height: 80, display: "flex", alignItems: "center"
       }}>
-        <div style={{ maxWidth:1200, margin:"0 auto", height:72, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto", width: "100%", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <Link to="/" style={{ textDecoration:"none" }}><Logo /></Link>
 
           {/* Desktop Links */}
@@ -115,11 +118,11 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div style={{ display:"flex", gap:12, alignItems:"center" }}>
-            <Link to="/signup" style={{ 
+          <div style={{ display:"flex", gap:16, alignItems:"center", marginLeft: 'auto' }}>
+            <Link to="/signup" className="desktop-links" style={{ 
               display:"none", fontFamily:FB, fontSize:14, fontWeight:600, color:G.green, 
               textDecoration:"none", padding:"10px 18px", borderRadius:10, background:G.greenPale
-            }} className="desktop-links">Log In</Link>
+            }}>Log In</Link>
             <Link to="/booking" className="btn-primary" style={{ padding:"10px 22px", borderRadius:10, fontSize:14 }}>Book Now</Link>
             <button 
               onClick={() => setMenuOpen(true)}
