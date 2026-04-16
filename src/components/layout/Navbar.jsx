@@ -61,8 +61,8 @@ export default function Navbar() {
         <div style={{ maxWidth:1200, margin:"0 auto", width: "100%", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <Link to="/" style={{ textDecoration:"none" }}><Logo /></Link>
 
-          {/* Desktop Links */}
-          <div style={{ display:"none", gap:32, alignItems:"center" }} className="desktop-links">
+          {/* Desktop Links - Centered */}
+          <div style={{ display:"none", gap:32, alignItems:"center", flex: 1, justifyContent: "center" }} className="desktop-links">
             <div 
               onMouseEnter={() => setDropdown('services')} 
               onMouseLeave={() => setDropdown(null)}

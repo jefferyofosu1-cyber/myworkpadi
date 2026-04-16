@@ -53,7 +53,9 @@ nav.scrolled {
 }
 
 .hero-content {
-  z-index: 2;
+  z-index: 10;
+  position: relative;
+  pointer-events: auto;
 }
 
 .hero-badge {
