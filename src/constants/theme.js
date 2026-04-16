@@ -23,4 +23,5 @@ export const G = {
 
 // Font Families
 export const FH = "'Outfit', sans-serif";
+export const FD = FH; // Alias for Display/Heading fonts
 export const FB = "'Plus Jakarta Sans', sans-serif";
