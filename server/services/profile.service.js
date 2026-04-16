@@ -1,6 +1,11 @@
 import { supabase } from '../config/supabase.js';
 
-export class ProfileService {
+/**
+ * ProfileService - Production Version 1.0.2
+ * Refactored to ensure strict ES6 class compliance and clear method boundaries
+ * to resolve Railway Node.js v18.20 parser issues.
+ */
+class ProfileService {
   /**
    * Updates basic profile information (Process 1 - Customer Step 4)
    */
@@ -97,7 +102,6 @@ export class ProfileService {
     
     // Logic to notify admin could go here
     console.log(`[Admin Notification] Tasker ${userId} is ready for vetting.`);
-    
     return data;
   }
 
@@ -151,3 +155,5 @@ export class ProfileService {
     }));
   }
 }
+
+export { ProfileService };
