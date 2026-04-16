@@ -162,3 +162,17 @@ button {
   align-items: center;
   justify-content: center;
 }
+
+.hero-content {
+  z-index: 5;
+  position: relative;
+}
+
+/* Responsive Utilities */
+.mobile-only { display: none; }
+.desktop-only { display: block; }
+
+@media (max-width: 900px) {
+  .mobile-only { display: block; }
+  .desktop-only { display: none; }
+}

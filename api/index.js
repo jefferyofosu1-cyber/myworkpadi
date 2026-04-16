@@ -47,8 +47,23 @@ if (process.env.SENTRY_DSN) {
 
 // 1. Security & Optimization Middleware
 app.use(helmet()); // Sets various HTTP headers for security
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'https://myworkpadi.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173'
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(compression()); // Gzip compression

@@ -118,11 +118,11 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div style={{ display:"flex", gap:16, alignItems:"center", marginLeft: 'auto' }}>
-            <Link to="/signup" className="desktop-links" style={{ 
-              display:"none", fontFamily:FB, fontSize:14, fontWeight:600, color:G.green, 
+          <div className="navbar-actions" style={{ display:"flex", gap:16, alignItems:"center", marginLeft: 'auto' }}>
+            <Link to="/signup" style={{ 
+              fontFamily:FB, fontSize:14, fontWeight:600, color:G.green, 
               textDecoration:"none", padding:"10px 18px", borderRadius:10, background:G.greenPale
-            }}>Log In</Link>
+            }} className="desktop-only">Log In</Link>
             <Link to="/booking" className="btn-primary" style={{ padding:"10px 22px", borderRadius:10, fontSize:14 }}>Book Now</Link>
             <button 
               onClick={() => setMenuOpen(true)}
