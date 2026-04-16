@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useBooking } from '../BookingContext';
 import { G, FB, FD, SectionLabel } from './shared';
 import { api } from '../../../utils/api';
@@ -6,8 +7,17 @@ import { ArrowRight, ShieldCheck, Zap, Heart } from 'lucide-react';
 
 export default function Screen0_Login() {
     const { goNext, setBookingData } = useBooking();
+    const location = useLocation();
     const [phone, setPhone] = useState("");
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const phoneParam = params.get('phone');
+        if (phoneParam) {
+            setPhone(phoneParam);
+        }
+    }, [location]);
 
     const handleNext = async () => {
         setLoading(true);

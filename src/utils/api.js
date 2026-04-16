@@ -1,5 +1,10 @@
 // src/utils/api.js
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const isProd = import.meta.env.PROD || window.location.hostname !== 'localhost';
+const BASE_URL = import.meta.env.VITE_API_URL || (isProd ? '/api' : 'http://localhost:5000/api');
+
+if (isProd && !import.meta.env.VITE_API_URL) {
+  console.warn('[CORE] VITE_API_URL is missing in production. Falling back to relative path /api. Ensure Vercel environment variables are set.');
+}
 
 async function request(path, options = {}) {
   const token = localStorage.getItem('taskgh_token');
