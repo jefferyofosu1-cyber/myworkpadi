@@ -99,6 +99,8 @@ export class ProfileService {
     console.log(`[Admin Notification] Tasker ${userId} is ready for vetting.`);
     
     return data;
+  }
+
   /**
    * Fetches a full profile by ID.
    */
@@ -111,6 +113,8 @@ export class ProfileService {
 
     if (error) throw new Error(`Fetch failed: ${error.message}`);
     return profile;
+  }
+
   /**
    * Fetches all active, verified taskers for discovery.
    */
