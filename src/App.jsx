@@ -10,6 +10,7 @@ import HowItWorksPage from './pages/HowItWorksPage'
 import BecomeATaskerPage from './pages/BecomeATaskerPage'
 import AboutPage from './pages/AboutPage'
 import SupportPage from './pages/SupportPage'
+import PricingPage from './pages/PricingPage'
 
 // Functional Flows
 import BookingFlow from './pages/BookingFlow'
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="/become-a-tasker" element={<MainLayout><BecomeATaskerPage /></MainLayout>} />
           <Route path="/about" element={<MainLayout><AboutPage /></MainLayout>} />
           <Route path="/support" element={<MainLayout><SupportPage /></MainLayout>} />
+          <Route path="/pricing" element={<MainLayout><PricingPage /></MainLayout>} />
           
           <Route path="/booking" element={<MainLayout><BookingFlow /></MainLayout>} />
           <Route path="/profile/:id" element={<MainLayout><PublicTaskerProfile /></MainLayout>} />
