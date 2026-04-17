@@ -1,3 +1,4 @@
+const envUrl = import.meta.env.VITE_API_URL || '';
 const isProd = import.meta.env.PROD || window.location.hostname !== 'localhost';
 const PROD_URL = 'https://myworkpadi-production.up.railway.app/api';
 

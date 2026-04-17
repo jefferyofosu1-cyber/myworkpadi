@@ -1,5 +1,5 @@
 builder = "NIXPACKS"
-# Removed buildCommand to prevent unnecessary Vite builds on backend-only deployment
+buildCommand = "npm install"
 
 [deploy]
 startCommand = "node api/index.js"
