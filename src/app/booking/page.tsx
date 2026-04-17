@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { createClient } from "@/utils/supabase/client";
+import { useLoadScript } from "@react-google-maps/api";
+import usePlacesAutocomplete, { getGeocode } from "use-places-autocomplete";
 import {
   Wrench, Zap, Home, Truck, Brush, Wind, Hammer, MoreHorizontal,
   ArrowRight, ArrowLeft, Upload, MapPin, Calendar, Clock,
-  User, CheckCircle, Loader2
+  User, CheckCircle, Loader2, Crosshair
 } from "lucide-react";
 
 const categories = [
@@ -23,6 +25,100 @@ const categories = [
 ];
 
 const STEPS = ["Category", "Describe", "When & Where", "Review"];
+
+const libraries = ["places"] as any;
+
+function LocationPicker({ location, setLocation }: { location: string, setLocation: (val: string) => void }) {
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
+    libraries,
+  });
+
+  const {
+    ready,
+    value,
+    suggestions: { status, data },
+    setValue,
+    clearSuggestions,
+  } = usePlacesAutocomplete({
+    requestOptions: {},
+    debounce: 300,
+  });
+
+  const [geolocating, setGeolocating] = useState(false);
+
+  // Sync initial location
+  if (location && !value && ready) {
+    setValue(location, false);
+  }
+
+  const handleSelect = async (address: string) => {
+    setValue(address, false);
+    clearSuggestions();
+    setLocation(address);
+  };
+
+  const handleCurrentLocation = () => {
+    if (!navigator.geolocation) return;
+    setGeolocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const results = await getGeocode({ location: { lat: latitude, lng: longitude } });
+          const address = results[0]?.formatted_address || "Unknown Location";
+          setValue(address, false);
+          setLocation(address);
+        } catch (error) {
+          console.error("Geocoding error", error);
+        }
+        setGeolocating(false);
+      },
+      () => setGeolocating(false)
+    );
+  };
+
+  if (!isLoaded) return <input disabled placeholder="Loading maps..." className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none text-sm bg-slate-50 text-slate-400" />;
+
+  return (
+    <div className="relative">
+      <div className="relative flex items-center">
+        <input
+          value={value}
+          onChange={(e) => {
+            setValue(e.target.value);
+            setLocation(e.target.value);
+          }}
+          disabled={!ready}
+          placeholder="e.g. East Legon, Accra"
+          className="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none text-sm text-slate-800 placeholder-slate-300 transition-all font-medium"
+        />
+        <button 
+          type="button"
+          onClick={handleCurrentLocation}
+          title="Use Current Location"
+          className={`absolute right-3 p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors ${geolocating ? "animate-pulse text-blue-500" : ""}`}
+        >
+          <Crosshair className="w-5 h-5" />
+        </button>
+      </div>
+      {status === "OK" && (
+        <ul className="absolute z-10 w-full mt-1 bg-white border border-slate-100 rounded-xl shadow-lg max-h-60 overflow-auto">
+          {data.map(({ place_id, description }) => (
+            <li
+              key={place_id}
+              onClick={() => handleSelect(description)}
+              className="px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 font-medium"
+            >
+              <MapPin className="w-4 h-4 inline mr-2 text-slate-400" />
+              {description}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function BookingContent() {
   const params = useSearchParams();
@@ -182,12 +278,7 @@ function BookingContent() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide"><MapPin className="w-3.5 h-3.5 inline mr-1" />Location</label>
-                  <input
-                    value={location}
-                    onChange={e => setLocation(e.target.value)}
-                    placeholder="e.g. East Legon, Accra"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none text-sm text-slate-800 placeholder-slate-300 transition-all"
-                  />
+                  <LocationPicker location={location} setLocation={setLocation} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>

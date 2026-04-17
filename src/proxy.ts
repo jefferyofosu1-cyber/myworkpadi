@@ -57,7 +57,9 @@ export async function proxy(request: NextRequest) {
 
     const role = profile?.role;
     const url = request.nextUrl.clone();
-    url.pathname = role === "tasker" ? "/tasker/dashboard" : "/customer/dashboard";
+    if (role === "admin") url.pathname = "/admin/dashboard";
+    else if (role === "tasker") url.pathname = "/tasker/dashboard";
+    else url.pathname = "/customer/dashboard";
     return NextResponse.redirect(url);
   }
 
