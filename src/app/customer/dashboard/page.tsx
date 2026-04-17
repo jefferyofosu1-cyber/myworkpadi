@@ -54,10 +54,10 @@ export default async function CustomerDashboard() {
         {/* Welcome Header */}
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="text-slate-400 text-sm mb-1">Good morning,</p>
             <h1 className="text-2xl lg:text-3xl font-black text-slate-900" style={{ fontFamily: "var(--font-jakarta)" }}>
-              {firstName} 👋
+              Welcome, {firstName} 👋
             </h1>
+            <p className="text-slate-500 text-sm mt-1">Here is what's happening with your tasks today.</p>
           </div>
           <Link
             href="/booking"
