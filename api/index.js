@@ -45,27 +45,39 @@ if (process.env.SENTRY_DSN) {
   app.use(Sentry.Handlers.requestHandler());
 }
 
-// 1. Security & Optimization Middleware
-app.use(helmet()); // Sets various HTTP headers for security
+// 0. HIGH-RESILIENCE DYNAMIC CORS (Must be at the top)
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'https://myworkpadi.vercel.app',
-  'http://localhost:3000',
-  'http://localhost:5173'
 ].filter(Boolean);
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Allow if it matches whitelist or is a vercel.app subdomain or is localhost
+  const isAllowed = !origin || 
+                    allowedOrigins.includes(origin) || 
+                    origin.endsWith('.vercel.app') || 
+                    origin.includes('localhost') ||
+                    origin.includes('127.0.0.1');
+
+  if (isAllowed) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization, Accept');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+
+  // Handle Preflight
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+})); // Sets various HTTP headers for security
 app.use(compression()); // Gzip compression
 app.use(morgan('dev')); // Logging
 app.use(generalLimiter); // Global rate limiting

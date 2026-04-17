@@ -38,7 +38,14 @@ function socketAuthMiddleware(socket, next) {
 export function setupSocket(httpServer) {
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.FRONTEND_URL || '*',
+      origin: (origin, callback) => {
+        const allowedOrigins = [process.env.FRONTEND_URL, 'https://myworkpadi.vercel.app'].filter(Boolean);
+        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin.includes('localhost')) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },
