@@ -41,9 +41,9 @@ export default async function CustomerDashboard() {
 
   const stats = [
     { label: "Total Bookings", value: bookings?.length ?? 0, icon: Package, color: "text-blue-600 bg-blue-50" },
-    { label: "Active Tasks", value: bookings?.filter(b => b.status === "active").length ?? 0, icon: Clock, color: "text-orange-600 bg-orange-50" },
-    { label: "Completed", value: bookings?.filter(b => b.status === "completed").length ?? 0, icon: CheckCircle, color: "text-green-600 bg-green-50" },
-    { label: "Total Spent", value: `GH₵ ${bookings?.reduce((s, b) => s + (b.amount || 0), 0) ?? 0}`, icon: TrendingUp, color: "text-purple-600 bg-purple-50" },
+    { label: "Active Tasks", value: bookings?.filter((b: any) => b.status === "active").length ?? 0, icon: Clock, color: "text-orange-600 bg-orange-50" },
+    { label: "Completed", value: bookings?.filter((b: any) => b.status === "completed").length ?? 0, icon: CheckCircle, color: "text-green-600 bg-green-50" },
+    { label: "Total Spent", value: `GH₵ ${bookings?.reduce((s: number, b: any) => s + (b.amount || 0), 0) ?? 0}`, icon: TrendingUp, color: "text-purple-600 bg-purple-50" },
   ];
 
   return (

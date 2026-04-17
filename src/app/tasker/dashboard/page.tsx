@@ -36,13 +36,13 @@ export default async function TaskerDashboard() {
     .order("created_at", { ascending: false })
     .limit(5);
 
-  const totalEarnings = jobs?.filter(j => j.status === "completed").reduce((s, j) => s + (j.amount || 0), 0) ?? 0;
+  const totalEarnings = jobs?.filter((j: any) => j.status === "completed").reduce((s: number, j: any) => s + (j.amount || 0), 0) ?? 0;
   const isVerified = taskerProfile?.is_verified;
 
   const stats = [
     { label: "Total Earnings", value: `GH₵ ${totalEarnings}`, icon: DollarSign, color: "text-green-600 bg-green-50", trend: "+12% this month" },
-    { label: "Jobs Completed", value: jobs?.filter(j => j.status === "completed").length ?? 0, icon: CheckCircle, color: "text-blue-600 bg-blue-50", trend: "Great work!" },
-    { label: "Pending Jobs", value: jobs?.filter(j => j.status === "pending").length ?? 0, icon: Clock, color: "text-orange-600 bg-orange-50", trend: "Review & accept" },
+    { label: "Jobs Completed", value: jobs?.filter((j: any) => j.status === "completed").length ?? 0, icon: CheckCircle, color: "text-blue-600 bg-blue-50", trend: "Great work!" },
+    { label: "Pending Jobs", value: jobs?.filter((j: any) => j.status === "pending").length ?? 0, icon: Clock, color: "text-orange-600 bg-orange-50", trend: "Review & accept" },
     { label: "Rating", value: `${taskerProfile?.rating?.toFixed(1) ?? "—"} ★`, icon: Star, color: "text-yellow-600 bg-yellow-50", trend: `${taskerProfile?.review_count ?? 0} reviews` },
   ];
 

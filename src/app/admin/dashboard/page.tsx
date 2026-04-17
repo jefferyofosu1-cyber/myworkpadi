@@ -31,7 +31,7 @@ export default async function AdminDashboard() {
     .select("amount, status")
     .eq("status", "completed");
     
-  const totalRevenue = bookings?.reduce((acc, curr) => acc + (curr.amount || 0), 0) ?? 0;
+  const totalRevenue = bookings?.reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0) ?? 0;
   // Platform fee is typically a percentage, let's say 15%
   const platformRevenue = totalRevenue * 0.15;
 
