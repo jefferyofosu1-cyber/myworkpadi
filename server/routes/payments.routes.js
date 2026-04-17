@@ -1,10 +1,11 @@
 import express from 'express';
 import { PaymentService } from '../services/payment.service.js';
+import { BookingService } from '../services/booking.service.js';
 
 const router = express.Router();
 
 /**
- * @desc Initialize MoMo Payment
+ * @desc Initialize MoMo Payment (Legacy)
  * @route POST /api/payments/initialize
  */
 router.post('/initialize', async (req, res) => {
@@ -18,53 +19,31 @@ router.post('/initialize', async (req, res) => {
 });
 
 /**
- * @desc Deposit Escrow via Mobile Money (Live Paystack Integration)
- * @route POST /api/payments/deposit
+ * @desc Initialize MoMo Escrow Payment
+ * @route POST /api/payments/initiate
  */
-router.post('/deposit', async (req, res) => {
-  const { booking_id, amount, momo_number, provider } = req.body;
-
-  if (!amount || !momo_number) {
-    return res.status(400).json({ error: 'Amount and MoMo number required.' });
-  }
-
+router.post('/initiate', async (req, res) => {
+  const { bookingId, amount_ghs, phone, provider, payment_type } = req.body;
+  const userId = req.user?.userId || 'guest';
   try {
-    // In live apps, we use initializePayment and handle the redirect/prompt.
-    // PaymentService can be expanded to handle direct MoMo charge via Paystack.
-    res.status(200).json({
-      message: 'Escrow deposit initialized',
-      verification_status: 'pending',
-      details: { booking_id, amount, provider }
+    const result = await PaymentService.initiateMoMoCharge(bookingId, userId, {
+      amount_ghs, phone, provider, payment_type
     });
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-import { BookingService } from '../services/booking.service.js';
-
 /**
- * @desc Webhook handler for Paystack
+ * @desc Webhook handler for Paystack (Escrow Management)
  * @route POST /api/payments/webhook
  */
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+router.post('/webhook', express.json(), async (req, res) => {
+  const signature = req.headers['x-paystack-signature'];
   try {
-    const signature = req.headers['x-paystack-signature'];
-    const event = req.body; // Paystack sends a JSON body for successful events
-    
-    // 1. In production, verify signature here using crypto
-    
-    // 2. Handle successful charge
-    if (event.event === 'charge.success') {
-        const { booking_id } = event.data.metadata;
-        const amount = event.data.amount / 100; // Paystack is in kobo/pesewas
-        
-        console.log(`[Webhook] Payment Success for Booking ${booking_id}: GHS ${amount}`);
-        
-        // Transition state to deposit_paid (which triggers matching broadcast)
-        await BookingService.transitionStatus(booking_id, 'deposit_paid');
-    }
-
+    const success = await PaymentService.handleWebhook(signature, req.body);
+    if (success) console.log('[Webhook] Successfully processed Paystack event');
     res.sendStatus(200);
   } catch (err) {
     console.error('[Webhook Error]:', err.message);

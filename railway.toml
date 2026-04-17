@@ -10,10 +10,10 @@ restartPolicyMaxRetries = 5
 PORT = 5000
 NODE_ENV = "production"
 
-# Railway Healthcheck
+# Railway Healthcheck (Hardened for production boot times)
 [healthcheck]
 path = "/api/health"
 interval = 30
-timeout = 5
+timeout = 10
 successThreshold = 1
-failureThreshold = 3
+failureThreshold = 5

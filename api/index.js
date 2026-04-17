@@ -45,10 +45,14 @@ const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
-// Initialize Sentry
-if (process.env.SENTRY_DSN) {
-  Sentry.init({ dsn: process.env.SENTRY_DSN });
-  app.use(Sentry.Handlers.requestHandler());
+// Initialize Sentry (Only if DSN is valid to prevent boot hangs)
+if (process.env.SENTRY_DSN && process.env.SENTRY_DSN !== 'your-sentry-dsn') {
+  try {
+    Sentry.init({ dsn: process.env.SENTRY_DSN });
+    app.use(Sentry.Handlers.requestHandler());
+  } catch (e) {
+    console.warn('[WARN] Sentry initialization failed. Skipping...');
+  }
 }
 
 // 0. HIGH-RESILIENCE DYNAMIC CORS (Must be at the top)
@@ -125,8 +129,7 @@ app.use('/api/quotes', quotesRoutes);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// 7. Error Handling
-if (process.env.SENTRY_DSN) {
+if (process.env.SENTRY_DSN && process.env.SENTRY_DSN !== 'your-sentry-dsn') {
   app.use(Sentry.Handlers.errorHandler());
 }
 app.use(notFoundHandler);
