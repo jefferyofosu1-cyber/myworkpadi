@@ -58,7 +58,7 @@ export default function Navbar() {
         transition:"all 0.3s", padding:"0 40px",
         height: 80, display: "flex", alignItems: "center"
       }}>
-        <div style={{ maxWidth:1200, margin:"0 auto", width: "100%", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div className="nav-container" style={{ maxWidth:1200, margin:"0 auto", width: "100%", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <Link to="/" style={{ textDecoration:"none" }}><Logo /></Link>
 
           {/* Desktop Links - Centered */}
@@ -123,7 +123,7 @@ export default function Navbar() {
               fontFamily:FB, fontSize:14, fontWeight:600, color:G.green, 
               textDecoration:"none", padding:"10px 18px", borderRadius:10, background:G.greenPale
             }} className="desktop-only">Log In</Link>
-            <Link to="/booking" className="btn-primary" style={{ padding:"10px 22px", borderRadius:10, fontSize:14 }}>Book Now</Link>
+            <Link to="/booking" className="btn-primary desktop-only" style={{ padding:"10px 22px", borderRadius:10, fontSize:14 }}>Book Now</Link>
             <button 
               onClick={() => setMenuOpen(true)}
               style={{ background:"none", border:"none", cursor:"pointer", padding:8 }}
@@ -157,8 +157,8 @@ export default function Navbar() {
               ))}
             </div>
             <div style={{ marginTop:"auto", display:"flex", flexDirection:"column", gap:12 }}>
-              <Link to="/signup" className="btn-primary" style={{ width:"100%" }}>Create Account</Link>
-              <Link to="/login" className="btn-outline" style={{ width:"100%" }}>Log In</Link>
+              <Link to="/booking" className="btn-primary" style={{ width:"100%", textAlign: "center" }}>Book Now</Link>
+              <Link to="/login" className="btn-outline" style={{ width:"100%", textAlign: "center", padding: "14px 28px", borderRadius: 14 }}>Log In</Link>
             </div>
           </div>
         </div>
@@ -168,6 +168,7 @@ export default function Navbar() {
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideInLeft { from { transform: translateX(100%); } to { transform: translateX(0); } }
         @media (min-width: 900px) { .desktop-links { display: flex !important; } .mobile-only { display: none !important; } }
+        @media (max-width: 900px) { nav { padding: 0 20px !important; } .nav-container { padding: 0 !important; } }
         .dropdown-item:hover { background: ${G.cloud}; color: ${G.green} !important; }
       `}</style>
     </>

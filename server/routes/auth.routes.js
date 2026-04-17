@@ -11,11 +11,10 @@ router.post('/trigger-otp', async (req, res) => {
   const { identifier } = req.body; 
 
   if (!identifier) {
-    return res.status(400).json({ error: 'Phone number is required' });
+    return res.status(400).json({ error: 'Email or Phone is required' });
   }
 
   try {
-    // Note: identifier here is assumed to be phone for the core TaskGH flow
     const result = await AuthService.requestOTP(identifier);
     res.json({ message: `OTP sent to ${identifier}`, data: result });
   } catch (err) {

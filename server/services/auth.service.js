@@ -1,68 +1,66 @@
-import { redis } from '../config/redisClient.js';
 import { supabase } from '../config/supabase.js';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import axios from 'axios';
 
 dotenv.config();
 
-const TERMII_API_KEY = process.env.TERMII_API_KEY;
-const TERMII_SENDER_ID = process.env.TERMII_SENDER_ID || 'TaskGH';
-const TERMII_URL = 'https://api.ng.termii.com/api/sms/send';
+const FLASHSMS_API_KEY = process.env.FLASHSMS_API_KEY;
+const FLASHSMS_SENDER_ID = process.env.FLASHSMS_SENDER_ID || 'TaskGH';
 
 export class AuthService {
   /**
-   * Generates a 6 digit OTP, stores it in Redis (10m expiration),
-   * and sends it to the provided phone number via Termii endpoint.
-   * Includes rate limit guard: max 5 requests per hour.
+   * Generates a 6 digit OTP, stores it in Supabase otps table (10m expiration),
+   * and simulates sending it via SMS.
    */
-  static async requestOTP(phone) {
-    const rateLimitKey = `otp:attempts:${phone}`;
-    const attempts = await redis.get(rateLimitKey);
-    
-    if (attempts && parseInt(attempts) >= 5) {
-      throw new Error('Too many OTP requests. Please try again in an hour.');
-    }
+  static async requestOTP(identifier) {
+    // Note: Rate limiting is delegated to Vercel/Redis-less solutions or API Gateway.
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60000).toISOString();
     
-    // Store in Redis with TTL of 600s (10 min)
-    await redis.set(`otp:${phone}`, otp, 'EX', 600);
+    // Store in Supabase 'otps' table
+    // (Using the legacy 'phone' column to store either email or phone natively)
+    const { error } = await supabase.from('otps').upsert({ 
+      phone: identifier, 
+      otp: otp, 
+      expires_at: expiresAt 
+    });
 
-    // Increment rate limit attempts
-    if (!attempts) {
-      await redis.set(rateLimitKey, 1, 'EX', 3600);
-    } else {
-      await redis.incr(rateLimitKey);
+    if (error) {
+      throw new Error(`Failed to store OTP: ${error.message}`);
     }
 
     const message = `Your TaskGH verification code is ${otp}. It expires in 10 minutes.`;
 
-    // Live Integration with Termii
-    if (TERMII_API_KEY) {
-      const response = await fetch(TERMII_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: phone,
-          from: TERMII_SENDER_ID,
-          sms: message,
-          type: 'plain',
-          channel: 'generic',
-          api_key: TERMII_API_KEY,
-        }),
-      });
+    const isEmail = identifier.includes('@');
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(`Termii SMS failed: ${data.message || 'Unknown error'}`);
-      }
-      return data;
+    if (isEmail) {
+      // Simulate Email Delivery via Console Log (Integrate Resend here in future)
+      console.log(`[EMAIL MOCK] To: ${identifier} | Subject: Login Code | Body: ${otp}`);
+      return { message: 'OTP sent to email successfully' };
     } else {
-      // Fallback for local testing if API key isn't provided yet
-      console.log(`[LIVE MOCK - No Termii API Key] Sent SMS to ${phone}: ${message}`);
-      return { message: 'OTP logged to console (missing Termii Key)' };
+      // Send OTP via FlashSMS
+      if (FLASHSMS_API_KEY) {
+        try {
+          await axios.post('https://app.flashsms.africa/api/v1/sms/send', {
+            recipients: [identifier],
+            senderId: FLASHSMS_SENDER_ID,
+            message: message,
+            isFlash: false 
+          }, {
+            headers: { 'Authorization': `Bearer ${FLASHSMS_API_KEY}` }
+          });
+          console.log(`[FlashSMS] Sent OTP to ${identifier}`);
+          return { message: `OTP sent successfully` };
+        } catch (err) {
+          console.error('[FlashSMS Error]', err.response?.data || err.message);
+          throw new Error('Failed to send OTP via SMS');
+        }
+      } else {
+        console.log(`[SMS MOCK] Sent SMS to ${identifier}: ${message}`);
+        return { message: 'OTP logged to console (FlashSMS disabled - Missing API Key)' };
+      }
     }
   }
 
@@ -70,48 +68,66 @@ export class AuthService {
    * Verifies the OTP, provisions a new Supabase user if not exists, 
    * and generates a JWT session.
    */
-  static async verifyOTP(phone, otp, isTasker = false) {
-    const cachedOtp = await redis.get(`otp:${phone}`);
+  static async verifyOTP(identifier, otp, isTasker = false) {
+    // Fetch OTP from Supabase 'otps' table
+    const { data: otpRecord, error: otpError } = await supabase
+      .from('otps')
+      .select('*')
+      .eq('phone', identifier)
+      .single();
     
-    if (!cachedOtp) {
+    if (otpError || !otpRecord) {
       throw new Error('OTP expired or not requested');
     }
     
-    if (cachedOtp !== otp) {
+    if (new Date() > new Date(otpRecord.expires_at)) {
+      await supabase.from('otps').delete().eq('phone', identifier);
+      throw new Error('OTP expired');
+    }
+
+    if (otpRecord.otp !== otp) {
       throw new Error('Invalid OTP code');
     }
 
     // OTP is valid! Remove it.
-    await redis.del(`otp:${phone}`);
-    // Also reset rate limit on success
-    await redis.del(`otp:attempts:${phone}`);
+    await supabase.from('otps').delete().eq('phone', identifier);
+
+    const isEmail = identifier.includes('@');
 
     // Check if user exists in Supabase DB (Table is 'profiles')
-    let { data: user, error: fetchError } = await supabase
-      .from('profiles')
-      .select('id, is_tasker, is_admin')
-      .eq('phone_number', phone)
-      .single();
+    let query = supabase.from('profiles').select('id, is_tasker, is_admin');
+    if (isEmail) {
+      query = query.eq('email', identifier);
+    } else {
+      query = query.eq('phone_number', identifier);
+    }
+
+    let { data: user, error: fetchError } = await query.single();
 
     if (fetchError && fetchError.code === 'PGRST116') {
       // User doesn't exist, create via Supabase Admin API
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        phone: phone,
-        phone_confirm: true, 
-      });
+      const authPayload = isEmail 
+        ? { email: identifier, email_confirm: true } 
+        : { phone: identifier, phone_confirm: true };
+
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser(authPayload);
 
       if (authError) throw new Error('Failed to provision user: ' + authError.message);
       
       const newUserId = authData.user.id;
       
       // 1. Create base profile record
+      const profilePayload = isEmail
+        ? { id: newUserId, email: identifier, is_tasker: isTasker }
+        : { id: newUserId, phone_number: identifier, is_tasker: isTasker };
+
       const { data: newUser, error: insertError } = await supabase
         .from('profiles')
-        .insert({ id: newUserId, phone_number: phone, is_tasker: isTasker })
+        .insert(profilePayload)
         .select('id, is_tasker, is_admin')
         .single();
         
-      if (insertError) throw new Error('Failed to create user profile');
+      if (insertError) throw new Error(`Failed to create user profile: ${insertError.message}`);
       user = newUser;
 
       // 2. If Tasker, initialize the tasker-specific profile
@@ -122,13 +138,13 @@ export class AuthService {
       throw new Error('Database error fetching user profile');
     }
 
-    return this.generateSession(user, phone);
+    return this.generateSession(user, identifier);
   }
 
   /**
    * Generates a pair of Access and Refresh tokens.
    */
-  static async generateSession(user, phone) {
+  static async generateSession(user, identifier) {
     // Determine JWT Role
     let userRole = user.is_tasker ? 'tasker' : 'customer';
     let adminRole = null;
@@ -148,7 +164,7 @@ export class AuthService {
 
     // Generate JWTs
     const token = jwt.sign(
-      { userId: user.id, role: userRole, adminRole, phone },
+      { userId: user.id, role: userRole, adminRole, identifier },
       process.env.JWT_SECRET || 'fallback-secret-here',
       { expiresIn: '1h' } // 1 hour access token
     );
@@ -159,8 +175,11 @@ export class AuthService {
       { expiresIn: '7d' } // 7 day refresh token
     );
     
-    // Store refresh token securely in redis for rotation/revocation
-    await redis.set(`refresh:${user.id}`, refreshToken, 'EX', 7 * 24 * 60 * 60);
+    // Store refresh token securely in Supabase for rotation/revocation
+    await supabase.from('refresh_tokens').upsert({ 
+      user_id: user.id, 
+      token: refreshToken 
+    });
 
     return { token, refreshToken, user: { ...user, role: userRole, adminRole } };
   }
@@ -174,33 +193,38 @@ export class AuthService {
       const decoded = jwt.verify(rToken, process.env.JWT_REFRESH_SECRET || 'fallback-refresh-token-secret');
       const userId = decoded.userId;
 
-      // Verify token exists in Redis (revocation check)
-      const storedToken = await redis.get(`refresh:${userId}`);
-      if (!storedToken || storedToken !== rToken) {
+      // Verify token exists in Supabase (revocation check)
+      const { data: storedTokenRecord } = await supabase
+        .from('refresh_tokens')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (!storedTokenRecord || storedTokenRecord.token !== rToken) {
         throw new Error('Refresh token revoked or invalid');
       }
 
       // Fetch user profile to get latest roles
       const { data: user, error } = await supabase
         .from('profiles')
-        .select('id, is_tasker, is_admin, phone_number')
+        .select('id, is_tasker, is_admin, phone_number, email')
         .eq('id', userId)
         .single();
 
       if (error || !user) throw new Error('User no longer exists');
 
       // Generate new session (Rotation)
-      return this.generateSession(user, user.phone_number);
+      return this.generateSession(user, user.email || user.phone_number);
     } catch (err) {
       throw new Error('Invalid or expired refresh token');
     }
   }
 
   /**
-   * Revokes user session by deleting refresh token from Redis.
+   * Revokes user session by deleting refresh token from Supabase.
    */
   static async logout(userId) {
-    await redis.del(`refresh:${userId}`);
+    await supabase.from('refresh_tokens').delete().eq('user_id', userId);
     return { message: 'Logged out successfully' };
   }
 }

@@ -1,18 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   ArrowRight, 
-  CheckCircle, 
   Star, 
   ShieldCheck, 
   Zap, 
   Clock, 
   Award,
-  Search,
   ChevronRight,
-  Menu,
-  X,
   Wind,
   Sparkles,
   Droplets,
@@ -38,18 +34,6 @@ const STEPS = [
   { n: "04", title: "Review & finish", desc: "Confirm the work is done and rate your professional." },
 ];
 
-/* --- COMPONENTS --- */
-
-const Logo = () => (
-  <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
-    <div style={{ width: 32, height: 32, background: "#0A6E4A", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <CheckCircle size={20} color="white" />
-    </div>
-    <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 900, fontSize: 22, color: "#0D1117", letterSpacing: "-0.04em" }}>
-      Task<span style={{ color: "#0A6E4A" }}>GH</span>
-    </span>
-  </Link>
-);
 
 const TrustBar = () => (
   <div className="trust-bar">
@@ -66,15 +50,7 @@ const TrustBar = () => (
 
 export default function LandingPage() {
   const [phone, setPhone] = useState("");
-  const [scrolled, setScrolled] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const handleStart = (e) => {
     e?.preventDefault();
@@ -88,52 +64,6 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page">
-      {/* NAVIGATION */}
-      <nav className={scrolled ? "scrolled" : ""} style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
-        height: 80, display: "flex", alignItems: "center", transition: "all 0.3s",
-        padding: "0 24px"
-      }}>
-        <div style={{ maxWidth: 1240, margin: "0 auto", width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Logo />
-          
-          <div style={{ display: "flex", gap: 32, alignItems: "center" }} className="desktop-only">
-            {["Services", "How It Works", "Become a Tasker"].map(l => (
-              <a key={l} href={`#${l.toLowerCase().replace(/ /g, "-")}`} style={{ textDecoration: "none", color: "#1A202C", fontWeight: 600, fontSize: 15 }}>{l}</a>
-            ))}
-            <button className="hero-btn" onClick={() => navigate("/login")} style={{ padding: "10px 24px", fontSize: 14 }}>Log In</button>
-          </div>
-
-          <button onClick={() => setIsMenuOpen(true)} className="mobile-only" style={{ background: "none", border: "none" }}>
-            <Menu size={24} />
-          </button>
-        </div>
-      </nav>
-
-      {/* MOBILE MENU */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div 
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            style={{ position: "fixed", inset: 0, zIndex: 1100, background: "white", padding: 32, display: "flex", flexDirection: "column" }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 40 }}>
-              <Logo />
-              <button onClick={() => setIsMenuOpen(false)} style={{ background: "none", border: "none" }}><X size={28} /></button>
-            </div>
-            {["Services", "How It Works", "Become a Tasker"].map(l => (
-              <a key={l} href={`#${l.toLowerCase().replace(/ /g, "-")}`} onClick={() => setIsMenuOpen(false)} style={{ fontSize: 24, fontWeight: 800, color: "#0D1117", marginBottom: 24, textDecoration: "none" }}>{l}</a>
-            ))}
-            <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 16 }}>
-              <button className="hero-btn" style={{ width: "100%" }}>Book a Professional</button>
-              <button className="hero-btn" style={{ width: "100%", background: "#F1F4F9", color: "#1A202C" }}>Tasker Login</button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* HERO SECTION */}
       <section className="hero-split">
@@ -290,42 +220,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer style={{ padding: "100px 24px 60px", background: "#0D1117", color: "white" }}>
-        <div className="container" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 60, borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: 60 }}>
-          <div>
-            <Logo />
-            <p style={{ marginTop: 24, opacity: 0.6, lineHeight: 1.7 }}>
-              Accra's most trusted marketplace for home services. Quality work, verified professionals, and secure payments.
-            </p>
-          </div>
-          <div>
-            <h4 style={{ marginBottom: 24 }}>Company</h4>
-            {["About Us", "Careers", "Press", "Contact"].map(l => (
-              <a key={l} href="/" style={{ display: "block", color: "white", opacity: 0.6, textDecoration: "none", marginBottom: 12 }}>{l}</a>
-            ))}
-          </div>
-          <div>
-            <h4 style={{ marginBottom: 24 }}>Quick Links</h4>
-            {["All Services", "How It Works", "Become a Tasker", "Pricing"].map(l => (
-              <Link key={l} to="/" style={{ display: "block", color: "white", opacity: 0.6, textDecoration: "none", marginBottom: 12 }}>{l}</Link>
-            ))}
-          </div>
-          <div>
-            <h4 style={{ marginBottom: 24 }}>Follow Us</h4>
-            <div style={{ display: "flex", gap: 16 }}>
-              {["Instagram", "Facebook", "X"].map(l => (
-                <div key={l} style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Star size={18} />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div style={{ textAlign: "center", marginTop: 40, opacity: 0.4, fontSize: 13 }}>
-          © 2026 TaskGH (MyWorkPadi). All rights reserved.
-        </div>
-      </footer>
     </div>
   );
 }

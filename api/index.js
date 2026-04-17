@@ -13,25 +13,12 @@ import * as Sentry from '@sentry/node';
 // Middleware & Utilities
 import { globalErrorHandler, notFoundHandler } from '../server/middleware/errorHandler.js';
 import { generalLimiter, authLimiter } from '../server/middleware/rateLimiter.js';
-import { setupSocket } from '../server/realtime/socket.js';
+// Removed Workers & Queues as per Vercel serverless migration
 
-// Workers & Queues (Persistent Background Jobs - Bypass on Vercel)
-if (!process.env.VERCEL) {
-  try {
-    import('../server/workers/notificationWorker.js').catch(e => console.error('[Worker] Notification failed:', e));
-    import('../server/workers/quoteExpiryWorker.js').catch(e => console.error('[Worker] QuoteExpiry failed:', e));
-    import('../server/workers/payoutRetryWorker.js').catch(e => console.error('[Worker] PayoutRetry failed:', e));
-  } catch (err) {
-    console.error('[Worker] Initialization error (likely Redis):', err.message);
-  }
-}
-
-import { scheduleCronJobs } from '../server/workers/cronWorker.js';
 
 // Routes
 import authRoutes from '../server/routes/auth.routes.js';
 import bookingsRoutes from '../server/routes/bookings.routes.js';
-import paymentsRoutes from '../server/routes/payments.routes.js';
 import adminRoutes from '../server/routes/admin.routes.js';
 import disputesRoutes from '../server/routes/disputes.routes.js';
 import profileRoutes from '../server/routes/profile.routes.js';
@@ -96,13 +83,9 @@ app.use(generalLimiter); // Global rate limiting
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 3. Initialize Socket.io
-setupSocket(httpServer);
+// Removed Socket.io setup (not natively supported on Vercel Serverless)
 
-// 4. Initialize Cron Jobs (Persistent Maintenance - Bypass on Vercel)
-if (!process.env.VERCEL && (process.env.NODE_ENV === 'production' || process.env.ENABLE_CRONS === 'true')) {
-  scheduleCronJobs().catch(err => console.error('[Cron] Setup failed:', err));
-}
+// Removed Cron Jobs (Use Vercel Cron instead)
 
 // 5. API Core Routes
 app.get('/api', (req, res) => {
@@ -120,7 +103,6 @@ app.get('/api/health', (req, res) => {
 // 6. Mount Feature Routes
 app.use('/api/auth', authLimiter, authRoutes); // Stricter limit on auth
 app.use('/api/bookings', bookingsRoutes);
-app.use('/api/payments', paymentsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/disputes', disputesRoutes);
 app.use('/api/matching', matchingRoutes);
@@ -135,12 +117,10 @@ if (process.env.SENTRY_DSN && process.env.SENTRY_DSN !== 'your-sentry-dsn') {
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
 
-// Start Server (Bypass on Vercel, which uses its own entry point)
+// Start Server (Used for local dev; Vercel uses the exported app)
 if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
-  const HOST = '0.0.0.0'; // Explicitly bind to all interfaces for Railway
-  httpServer.listen(PORT, HOST, () => {
-    console.log(`🚀 TaskGH Server running on http://${HOST}:${PORT}`);
-    console.log(`📡 Socket.io ready & BullMQ workers active`);
+  app.listen(PORT, () => {
+    console.log(`🚀 TaskGH Server running locally on port ${PORT}`);
   });
 }
 

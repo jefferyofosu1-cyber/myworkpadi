@@ -8,22 +8,22 @@ import { ArrowRight, ShieldCheck, Zap, Heart } from 'lucide-react';
 export default function Screen0_Login() {
     const { goNext, setBookingData } = useBooking();
     const location = useLocation();
-    const [phone, setPhone] = useState("");
+    const [identifier, setIdentifier] = useState("");
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
-        const phoneParam = params.get('phone');
-        if (phoneParam) {
-            setPhone(phoneParam);
+        const contactParam = params.get('phone') || params.get('identifier');
+        if (contactParam) {
+            setIdentifier(contactParam);
         }
     }, [location]);
 
     const handleNext = async () => {
         setLoading(true);
         try {
-            await api.post('/auth/trigger-otp', { identifier: `+233${phone}` });
-            setBookingData(prev => ({ ...prev, phone: `+233${phone}` }));
+            await api.post('/auth/trigger-otp', { identifier: identifier.trim() });
+            setBookingData(prev => ({ ...prev, phone: identifier.trim() })); // keeping phone prop mapped in context for legacy backwards compat
             goNext();
         } catch (err) {
             alert(`Auth Error: ${err.message}`);
@@ -68,18 +68,17 @@ export default function Screen0_Login() {
                     {/* Right Column: CTA Card */}
                     <div className="fade-up" style={{ background: G.white, borderRadius: 28, padding: 40, boxShadow: "0 24px 64px rgba(0,0,0,0.1)", border: `1px solid ${G.border}` }}>
                         <h3 style={{ fontFamily: FD, fontWeight: 800, fontSize: 24, color: G.black, marginBottom: 12 }}>Get started now</h3>
-                        <p style={{ fontFamily: FB, fontSize: 15, color: G.steel, marginBottom: 28 }}>Secure your booking with your phone number.</p>
+                        <p style={{ fontFamily: FB, fontSize: 15, color: G.steel, marginBottom: 28 }}>Secure your booking with your phone or email.</p>
                         
                         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                             <div>
-                                <label style={{ display: "block", fontFamily: FB, fontSize: 11, fontWeight: 800, color: G.black, marginBottom: 8, letterSpacing: '0.05em' }}>PHONE NUMBER</label>
+                                <label style={{ display: "block", fontFamily: FB, fontSize: 11, fontWeight: 800, color: G.black, marginBottom: 8, letterSpacing: '0.05em' }}>EMAIL OR PHONE</label>
                                 <div style={{ display: "flex", gap: 12 }}>
-                                    <div style={{ padding: "14px 16px", borderRadius: 14, background: G.offWhite, color: G.steel, fontSize: 15, fontFamily: FB, fontWeight: 700, border: `1.5px solid ${G.border}` }}>+233</div>
                                     <input 
                                         className="input"
-                                        placeholder="0XX XXX XXXX" 
-                                        value={phone} 
-                                        onChange={e => setPhone(e.target.value)} 
+                                        placeholder="user@gmail.com or +233..." 
+                                        value={identifier} 
+                                        onChange={e => setIdentifier(e.target.value)} 
                                         style={{ flex: 1, padding: "14px 18px", borderRadius: 14, border: `1.5px solid ${G.border}`, fontFamily: FB, fontSize: 15, outline: 'none' }} 
                                     />
                                 </div>
@@ -88,7 +87,7 @@ export default function Screen0_Login() {
                             <button 
                                 className="btn btn-green" 
                                 onClick={handleNext} 
-                                disabled={phone.length < 9 || loading}
+                                disabled={identifier.length < 5 || loading}
                                 style={{ padding: '16px', borderRadius: 14, fontSize: 16 }}
                             >
                                 {loading ? (
@@ -99,7 +98,7 @@ export default function Screen0_Login() {
                             </button>
                             
                             <p style={{ textAlign: "center", fontSize: 12, color: G.mist, fontFamily: FB, marginTop: 4 }}>
-                                We'll send a secure code via SMS to verify your account.
+                                We'll send a secure code to verify your account.
                             </p>
                         </div>
                     </div>

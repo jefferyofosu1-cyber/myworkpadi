@@ -176,3 +176,13 @@ button {
   .mobile-only { display: block; }
   .desktop-only { display: none; }
 }
+
+@media (max-width: 600px) {
+  .container {
+    padding: 0 16px;
+  }
+  .btn {
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+}

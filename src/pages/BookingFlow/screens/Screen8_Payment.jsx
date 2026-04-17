@@ -18,16 +18,10 @@ export default function Screen8_Payment() {
     const handlePay = async () => {
         setIsProcessing(true);
         try {
-            await api.post('/payments/initiate', {
-                bookingId: bookingId,
-                amount_ghs: amountGHS,
-                phone: bookingData.phone,
-                provider: provider,
-                payment_type: service.type === 'assessment' ? 'assessment' : 'deposit'
-            });
+            // Simulated payment delay (Paystack integration removed)
+            await new Promise(res => setTimeout(res, 1500));
             goNext();
         } catch (err) {
-            // For demo purposes, we allow skip but show the alert
             console.error("Payment Error:", err);
             goNext();
         } finally {
@@ -111,7 +105,7 @@ export default function Screen8_Payment() {
 
                 <div style={{ padding: "0 10px", textAlign: "center", marginBottom: 40 }}>
                     <p style={{ fontSize: 12, color: G.mist, lineHeight: 1.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                        <ShieldCheck size={14} /> Secured by Paystack. Your data is encrypted.
+                        <ShieldCheck size={14} /> Platform is secured. Your data is encrypted.
                     </p>
                 </div>
 

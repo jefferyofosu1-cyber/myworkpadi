@@ -28,11 +28,11 @@ import DashboardOverview from './pages/tasker/DashboardOverview'
 import JobBoard from './pages/tasker/JobBoard'
 import ActiveJobs from './pages/tasker/ActiveJobs'
 
-const MainLayout = ({ children }) => (
+const MainLayout = ({ children, hideNav = false, hideFooter = false }) => (
   <>
-    <Navbar />
+    {!hideNav && <Navbar />}
     <main style={{ minHeight: '80vh' }}>{children}</main>
-    <Footer />
+    {!hideFooter && <Footer />}
   </>
 );
 

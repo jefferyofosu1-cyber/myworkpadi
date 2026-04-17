@@ -1,16 +1,16 @@
 let envUrl = import.meta.env.VITE_API_URL || '';
 const isProd = import.meta.env.PROD || window.location.hostname !== 'localhost';
-const PROD_URL = 'https://myworkpadi-production.up.railway.app/api';
+const PROD_URL = '/api';
 
-// Protocol Hardening: Ensure https:// is always present in production
-if (isProd && envUrl && !envUrl.startsWith('http')) {
+// Protocol Hardening: Ensure https:// is always present in production if an explicit URL is provided
+if (isProd && envUrl && !envUrl.startsWith('http') && !envUrl.startsWith('/')) {
   envUrl = `https://${envUrl}`;
 }
 
 const BASE_URL = envUrl || (isProd ? PROD_URL : 'http://localhost:5000/api');
 
 if (isProd && !envUrl) {
-  console.warn('[CORE] VITE_API_URL is missing in production. Falling back to relative path /api. Ensure Vercel environment variables are set.');
+  console.warn('[CORE] VITE_API_URL is missing. Using relative path /api.');
 }
 
 async function request(path, options = {}) {

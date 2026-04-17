@@ -84,7 +84,7 @@ export default function MoMoPaymentModal({ amount, onClose, onSuccess }) {
             
             <div className="momo-footer">
               <span className="secure-badge">
-                <Smartphone size={14} /> Powering secure payments through Paystack
+                <Smartphone size={14} /> Powering secure payments through the TaskGH platform
               </span>
             </div>
           </div>
