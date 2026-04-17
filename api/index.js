@@ -62,10 +62,10 @@ app.use((req, res, next) => {
                     origin.includes('127.0.0.1');
 
   if (isAllowed) {
-    res.setHeader('Access-Control-Allow-Origin', origin || '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization, Accept');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization, Accept, Origin');
+    res.header('Access-Control-Allow-Credentials', 'true');
   }
 
   // Handle Preflight
@@ -75,9 +75,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-})); // Sets various HTTP headers for security
+app.use(helmet()); // Basic security, removed restrictive cross-origin policy
 app.use(compression()); // Gzip compression
 app.use(morgan('dev')); // Logging
 app.use(generalLimiter); // Global rate limiting
