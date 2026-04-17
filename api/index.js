@@ -1,6 +1,9 @@
+import dotenv from 'dotenv';
+// 1. Load environment variables IMMEDIATELY
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
@@ -14,10 +17,15 @@ import { setupSocket } from '../server/realtime/socket.js';
 
 // Workers & Queues (Persistent Background Jobs - Bypass on Vercel)
 if (!process.env.VERCEL) {
-  import('../server/workers/notificationWorker.js');
-  import('../server/workers/quoteExpiryWorker.js');
-  import('../server/workers/payoutRetryWorker.js');
+  try {
+    import('../server/workers/notificationWorker.js').catch(e => console.error('[Worker] Notification failed:', e));
+    import('../server/workers/quoteExpiryWorker.js').catch(e => console.error('[Worker] QuoteExpiry failed:', e));
+    import('../server/workers/payoutRetryWorker.js').catch(e => console.error('[Worker] PayoutRetry failed:', e));
+  } catch (err) {
+    console.error('[Worker] Initialization error (likely Redis):', err.message);
+  }
 }
+
 import { scheduleCronJobs } from '../server/workers/cronWorker.js';
 
 // Routes
@@ -32,8 +40,6 @@ import quotesRoutes from '../server/routes/quotes.routes.js';
 import reviewsRoutes from '../server/routes/reviews.routes.js';
 import notificationRoutes from '../server/routes/notification.routes.js';
 
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);

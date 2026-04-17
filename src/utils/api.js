@@ -1,10 +1,7 @@
-let envUrl = import.meta.env.VITE_API_URL || '';
-if (envUrl && !envUrl.startsWith('http')) {
-  envUrl = `https://${envUrl}`;
-}
-
 const isProd = import.meta.env.PROD || window.location.hostname !== 'localhost';
-const BASE_URL = envUrl || (isProd ? '/api' : 'http://localhost:5000/api');
+const PROD_URL = 'https://myworkpadi-production.up.railway.app/api';
+
+const BASE_URL = envUrl || (isProd ? PROD_URL : 'http://localhost:5000/api');
 
 if (isProd && !envUrl) {
   console.warn('[CORE] VITE_API_URL is missing in production. Falling back to relative path /api. Ensure Vercel environment variables are set.');
