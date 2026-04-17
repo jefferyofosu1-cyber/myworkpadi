@@ -21,7 +21,8 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!supabase) return;
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    supabase.auth.getUser().then(async (res) => {
+      const user = res.data.user;
       if (user) {
         const { data: profile } = await supabase
           .from("profiles")
