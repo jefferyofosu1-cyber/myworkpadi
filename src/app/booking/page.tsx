@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { createClient } from "@/utils/supabase/client";
-import { useLoadScript } from "@react-google-maps/api";
-import usePlacesAutocomplete, { getGeocode } from "use-places-autocomplete";
 import {
   Wrench, Zap, Home, Truck, Brush, Wind, Hammer, MoreHorizontal,
   ArrowRight, ArrowLeft, Upload, MapPin, Calendar, Clock,
@@ -26,36 +24,48 @@ const categories = [
 
 const STEPS = ["Category", "Describe", "When & Where", "Review"];
 
-const libraries = ["places"] as any;
-
 function LocationPicker({ location, setLocation }: { location: string, setLocation: (val: string) => void }) {
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
-    libraries,
-  });
-
-  const {
-    ready,
-    value,
-    suggestions: { status, data },
-    setValue,
-    clearSuggestions,
-  } = usePlacesAutocomplete({
-    requestOptions: {},
-    debounce: 300,
-  });
-
+  const [query, setQuery] = useState(location);
+  const [results, setResults] = useState<{place_id: number, display_name: string}[]>([]);
+  const [loading, setLoading] = useState(false);
   const [geolocating, setGeolocating] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  // Sync initial location
-  if (location && !value && ready) {
-    setValue(location, false);
-  }
+  // Sync initial location automatically
+  useEffect(() => {
+    if (location && !query) {
+      setQuery(location);
+    }
+  }, [location, query]);
 
-  const handleSelect = async (address: string) => {
-    setValue(address, false);
-    clearSuggestions();
+  // Debounced OpenStreetMap (Nominatim) search limit to GH
+  useEffect(() => {
+    if (!query || query === location) {
+      setResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=gh`);
+        const data = await res.json();
+        setResults(data);
+        setShowDropdown(true);
+      } catch (error) {
+        console.error("OSM Search Error", error);
+      }
+      setLoading(false);
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [query, location]);
+
+  const handleSelect = (address: string) => {
+    setQuery(address);
     setLocation(address);
+    setShowDropdown(false);
   };
 
   const handleCurrentLocation = () => {
@@ -65,12 +75,14 @@ function LocationPicker({ location, setLocation }: { location: string, setLocati
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          const results = await getGeocode({ location: { lat: latitude, lng: longitude } });
-          const address = results[0]?.formatted_address || "Unknown Location";
-          setValue(address, false);
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const data = await res.json();
+          const address = data.display_name || "Unknown Location";
+          setQuery(address);
           setLocation(address);
+          setShowDropdown(false);
         } catch (error) {
-          console.error("Geocoding error", error);
+          console.error("OSM Geocoding Error:", error);
         }
         setGeolocating(false);
       },
@@ -78,18 +90,12 @@ function LocationPicker({ location, setLocation }: { location: string, setLocati
     );
   };
 
-  if (!isLoaded) return <input disabled placeholder="Loading maps..." className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none text-sm bg-slate-50 text-slate-400" />;
-
   return (
     <div className="relative">
       <div className="relative flex items-center">
         <input
-          value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-            setLocation(e.target.value);
-          }}
-          disabled={!ready}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
           placeholder="e.g. East Legon, Accra"
           className="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none text-sm text-slate-800 placeholder-slate-300 transition-all font-medium"
         />
@@ -97,24 +103,31 @@ function LocationPicker({ location, setLocation }: { location: string, setLocati
           type="button"
           onClick={handleCurrentLocation}
           title="Use Current Location"
-          className={`absolute right-3 p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors ${geolocating ? "animate-pulse text-blue-500" : ""}`}
+          className={`absolute right-3 p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors ${geolocating ? "text-blue-500" : ""}`}
         >
-          <Crosshair className="w-5 h-5" />
+          {geolocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Crosshair className="w-5 h-5" />}
         </button>
       </div>
-      {status === "OK" && (
+      
+      {showDropdown && results.length > 0 && (
         <ul className="absolute z-10 w-full mt-1 bg-white border border-slate-100 rounded-xl shadow-lg max-h-60 overflow-auto">
-          {data.map(({ place_id, description }) => (
+          {results.map((result) => (
             <li
-              key={place_id}
-              onClick={() => handleSelect(description)}
-              className="px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 font-medium"
+              key={result.place_id}
+              onClick={() => handleSelect(result.display_name)}
+              className="px-4 py-3 flex text-sm text-slate-700 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 font-medium"
             >
-              <MapPin className="w-4 h-4 inline mr-2 text-slate-400" />
-              {description}
+              <MapPin className="w-4 h-4 mr-2 text-slate-400 flex-shrink-0 mt-0.5" />
+              <span>{result.display_name}</span>
             </li>
           ))}
         </ul>
+      )}
+      
+      {loading && showDropdown && results.length === 0 && (
+         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-100 rounded-xl shadow-sm px-4 py-3 text-sm text-slate-400">
+           Searching OpenStreetMap...
+         </div>
       )}
     </div>
   );
