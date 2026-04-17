@@ -1,6 +1,11 @@
-const envUrl = import.meta.env.VITE_API_URL || '';
+let envUrl = import.meta.env.VITE_API_URL || '';
 const isProd = import.meta.env.PROD || window.location.hostname !== 'localhost';
 const PROD_URL = 'https://myworkpadi-production.up.railway.app/api';
+
+// Protocol Hardening: Ensure https:// is always present in production
+if (isProd && envUrl && !envUrl.startsWith('http')) {
+  envUrl = `https://${envUrl}`;
+}
 
 const BASE_URL = envUrl || (isProd ? PROD_URL : 'http://localhost:5000/api');
 
