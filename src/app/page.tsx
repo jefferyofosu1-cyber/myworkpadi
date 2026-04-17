@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Zap, Star, Shield, Clock, ChevronRight, CheckCircle, Wrench, Zap as ZapIcon, Home, Truck, Brush, Wind, Hammer } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import TrustBar from "@/components/TrustBar";
 
 const services = [
   { icon: Wrench, name: "Plumbing", desc: "Leaks, pipes, fixtures & more", price: "From GH₵80", color: "bg-blue-50 text-blue-600" },
@@ -42,7 +43,7 @@ export default function HomePage() {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold px-4 py-1.5 rounded-full mb-6 uppercase tracking-wider">
               <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
-              Ghana's #1 Task Marketplace
+              Ghana's #1 Task Marketplace · 40,000+ Jobs Done
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight mb-6" style={{ fontFamily: "var(--font-jakarta)" }}>
               Get Any Task Done By{" "}
@@ -51,6 +52,10 @@ export default function HomePage() {
             </h1>
             <p className="text-lg sm:text-xl text-slate-500 leading-relaxed mb-10 max-w-2xl mx-auto">
               From plumbing to cleaning, electrical to painting — book vetted, background-checked taskers in minutes. Payments held in escrow until you're satisfied.
+            </p>
+            <p className="text-xs font-bold text-green-600 mb-4 flex items-center justify-center gap-1.5">
+              <CheckCircle className="w-4 h-4" />
+              Book in 60 seconds · No account needed
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -69,14 +74,19 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Trust badges */}
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-10 text-sm text-slate-400 font-medium">
-              {["Escrow Protection", "Background Checked", "24/7 Support", "Happiness Guarantee"].map((b) => (
-                <span key={b} className="flex items-center gap-1.5">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  {b}
-                </span>
-              ))}
+            {/* Trust Bar */}
+            <div className="mt-10">
+              <TrustBar />
+            </div>
+
+            {/* Social proof ticker */}
+            <div className="mt-6 inline-flex items-center gap-2 bg-white border border-slate-100 shadow-md rounded-full px-4 py-2">
+              <div className="flex -space-x-2">
+                {["J", "A", "K"].map((l, i) => (
+                  <div key={i} className="w-7 h-7 bg-blue-600 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold">{l}</div>
+                ))}
+              </div>
+              <span className="text-xs text-slate-600 font-medium"><strong className="text-slate-800">140+ Ghanaians</strong> booked a task today</span>
             </div>
           </div>
         </div>
