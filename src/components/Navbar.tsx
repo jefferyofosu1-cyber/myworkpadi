@@ -21,8 +21,8 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!supabase) return;
-    supabase.auth.getUser().then(async (res) => {
-      const user = res.data.user;
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
           .from("profiles")
@@ -31,7 +31,8 @@ export default function Navbar() {
           .single();
         setUser({ email: user.email, role: profile?.role });
       }
-    });
+    };
+    checkUser();
   }, [supabase]);
 
   const handleSignOut = async () => {
