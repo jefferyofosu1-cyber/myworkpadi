@@ -177,11 +177,12 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
             <div className="col-span-2 lg:col-span-1">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-white fill-white" />
-                </div>
-                <span className="text-lg font-bold text-white">Task<span className="text-blue-400">GH</span></span>
+              <div className="mb-4">
+                <img 
+                  src="/logo.jpg" 
+                  alt="TaskGH Logo" 
+                  className="h-10 w-auto object-contain bg-white rounded-lg p-1"
+                />
               </div>
               <p className="text-slate-400 text-sm leading-relaxed">Ghana's most trusted marketplace for professional home services.</p>
             </div>
