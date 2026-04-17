@@ -134,8 +134,9 @@ app.use(globalErrorHandler);
 
 // Start Server (Bypass on Vercel, which uses its own entry point)
 if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
-  httpServer.listen(PORT, () => {
-    console.log(`🚀 TaskGH Server running on http://localhost:${PORT}`);
+  const HOST = '0.0.0.0'; // Explicitly bind to all interfaces for Railway
+  httpServer.listen(PORT, HOST, () => {
+    console.log(`🚀 TaskGH Server running on http://${HOST}:${PORT}`);
     console.log(`📡 Socket.io ready & BullMQ workers active`);
   });
 }
