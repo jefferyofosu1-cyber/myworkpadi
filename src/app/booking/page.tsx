@@ -10,8 +10,8 @@ import { calculateTotal, formatGHS, BOOKING_PROTECTION, EMERGENCY_SURCHARGE } fr
 import {
   Wrench, Zap, Home, Truck, Brush, Wind, Hammer, Tv, MoreHorizontal,
   ArrowRight, ArrowLeft, Upload, MapPin, Calendar, Clock, AlertCircle,
-  User, CheckCircle, Loader2, Crosshair, Star, X, Phone, Mail, ChevronDown,
-  ShieldCheck, CreditCard, Banknote, Phone as PhoneIcon
+  User, CheckCircle, Loader2, Crosshair, Star, X, Phone, Mail,
+  ShieldCheck, CreditCard, Smartphone
 } from "lucide-react";
 
 // ─── Categories ────────────────────────────────────────────────────────────────
@@ -648,7 +648,7 @@ function BookingContent() {
                 <p className="text-xs font-bold text-slate-600 mb-3 uppercase tracking-wide">Payment Method</p>
                 <div className="grid grid-cols-2 gap-3 mb-5">
                   <button className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700">
-                    <PhoneIcon className="w-5 h-5" />
+                    <Smartphone className="w-5 h-5" />
                     <span className="text-xs font-bold">Mobile Money</span>
                   </button>
                   <button className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-slate-200 text-slate-500 hover:border-slate-300 transition-colors">

@@ -66,7 +66,7 @@ export default function HomePage() {
                 <ChevronRight className="w-4 h-4" />
               </Link>
               <Link
-                href="/signup?role=tasker"
+            href="/tasker/apply"
                 className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-base px-8 py-4 rounded-2xl border border-slate-200 hover:border-slate-300 shadow-sm hover:-translate-y-0.5 transition-all"
               >
                 Become a Tasker
@@ -173,7 +173,7 @@ export default function HomePage() {
             Join 5,000+ taskers earning a great income doing what they love. Set your rates, choose your jobs.
           </p>
           <Link
-            href="/signup?role=tasker"
+            href="/tasker/apply"
             className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold text-base px-8 py-4 rounded-2xl shadow-lg shadow-orange-900/30 hover:-translate-y-0.5 transition-all"
           >
             Apply as a Tasker

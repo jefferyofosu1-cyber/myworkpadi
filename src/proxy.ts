@@ -35,6 +35,12 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Public routes that share a protected prefix — must be whitelisted first
+  const publicPaths = ["/tasker/apply"];
+  if (publicPaths.some(p => pathname.startsWith(p))) {
+    return supabaseResponse;
+  }
+
   // Protected routes
   const protectedPrefixes = ["/customer", "/tasker", "/admin"];
   const isProtected = protectedPrefixes.some((p) => pathname.startsWith(p));
