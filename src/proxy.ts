@@ -41,15 +41,43 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Protected routes
-  const protectedPrefixes = ["/customer", "/tasker", "/admin"];
-  const isProtected = protectedPrefixes.some((p) => pathname.startsWith(p));
+  // Protected routes access control
+  const isCustomerRoute = pathname.startsWith("/customer");
+  const isTaskerRoute = pathname.startsWith("/tasker");
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isProtected = isCustomerRoute || isTaskerRoute || isAdminRoute;
 
-  if (isProtected && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("redirectTo", pathname);
-    return NextResponse.redirect(url);
+  if (isProtected) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("redirectTo", pathname);
+      return NextResponse.redirect(url);
+    }
+
+    // Role Enforcement (RBAC)
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const role = profile?.role;
+
+    // Check if the user has permission to access the requested route
+    const hasAccess = 
+      (isCustomerRoute && role === "customer") ||
+      (isTaskerRoute && role === "tasker") ||
+      (isAdminRoute && role === "admin");
+
+    if (!hasAccess) {
+      // Redirect to their respective dashboard if they try to access another role's area
+      const url = request.nextUrl.clone();
+      if (role === "admin") url.pathname = "/admin/dashboard";
+      else if (role === "tasker") url.pathname = "/tasker/dashboard";
+      else url.pathname = "/customer/dashboard";
+      return NextResponse.redirect(url);
+    }
   }
 
   // Redirect authenticated users away from auth pages
