@@ -10,8 +10,6 @@ import { ArrowRight } from "lucide-react";
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-midnight selection:bg-accent/30">
-      <Navbar />
-
       <main>
         {/* Cinematic Hero */}
         <HeroSection />

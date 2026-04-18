@@ -88,22 +88,28 @@ export default function TaskerApplyPage() {
   // ── Success Screen ─────────────────────────────────────────────────────────
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
-            <CheckCircle className="w-8 h-8 text-green-600" />
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 transition-colors duration-300">
+        {/* Background Glows */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-primary/5 rounded-full blur-[100px]" />
+          <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-accent/5 rounded-full blur-[100px]" />
+        </div>
+
+        <div className="bg-foreground/[0.02] border border-border rounded-3xl backdrop-blur-xl shadow-2xl p-10 max-w-md w-full text-center relative z-10">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-5">
+            <CheckCircle className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 mb-3" style={{ fontFamily: "var(--font-jakarta)" }}>
+          <h2 className="text-2xl font-black text-foreground mb-3" style={{ fontFamily: "var(--font-jakarta)" }}>
             Application submitted! 🎉
           </h2>
-          <p className="text-slate-500 text-sm leading-relaxed mb-2">
+          <p className="text-muted text-sm leading-relaxed mb-2">
             We've sent a verification link to <strong>{email}</strong>.
           </p>
-          <p className="text-slate-400 text-sm mb-8">
+          <p className="text-muted/60 text-sm mb-8">
             Once your email is confirmed, our team will review and verify your profile within <strong>24 hours</strong>. You'll be notified when you're approved to start receiving jobs.
           </p>
           <Link href="/login"
-            className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-center transition-colors">
+            className="block w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl text-center transition-colors shadow-lg shadow-primary/20">
             Go to Sign In
           </Link>
         </div>
@@ -112,14 +118,14 @@ export default function TaskerApplyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       {/* Header */}
-      <header className="bg-white border-b border-slate-100 px-4 py-4">
+      <header className="bg-background/80 backdrop-blur-xl border-b border-border px-4 py-4 sticky top-0 z-50">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center">
-            <img src="/logo.jpg" alt="TaskGH Logo" className="h-9 w-auto object-contain" />
+            <img src="/logo.jpg" alt="TaskGH Logo" className="h-9 w-auto object-contain bg-white rounded-lg p-1" />
           </Link>
-          <Link href="/login" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">
+          <Link href="/login" className="text-sm font-semibold text-muted hover:text-primary transition-colors">
             Already have an account? Sign in →
           </Link>
         </div>
@@ -131,24 +137,24 @@ export default function TaskerApplyPage() {
           <div className="grid lg:grid-cols-2 gap-10 items-start">
             {/* Left: Value Prop */}
             <div>
-              <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-600 text-xs font-bold px-3 py-1.5 rounded-full mb-5 uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-black px-4 py-2 rounded-full mb-6 uppercase tracking-wider">
                 🚀 Now Hiring Taskers Across Ghana
               </div>
-              <h1 className="text-3xl lg:text-4xl font-black text-slate-900 mb-4 leading-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
+              <h1 className="text-4xl lg:text-6xl font-black text-foreground mb-6 leading-[0.9] tracking-tighter" style={{ fontFamily: "var(--font-jakarta)" }}>
                 Earn money doing what<br />
-                <span className="text-orange-500">you're already good at</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary">you're already good at.</span>
               </h1>
-              <p className="text-slate-500 text-base mb-8 leading-relaxed">
+              <p className="text-muted text-base mb-10 leading-relaxed font-medium">
                 Join 5,000+ Ghanaian taskers earning a great income on the TaskGH platform. Set your rates, choose your jobs, get paid fast.
               </p>
 
-              <div className="space-y-4 mb-8">
+              <div className="space-y-6 mb-12">
                 {perks.map(p => (
-                  <div key={p.title} className="flex items-start gap-3">
-                    <div className="text-2xl w-10 flex-shrink-0">{p.icon}</div>
+                  <div key={p.title} className="flex items-start gap-4">
+                    <div className="text-2xl w-12 h-12 rounded-2xl bg-foreground/5 flex items-center justify-center flex-shrink-0">{p.icon}</div>
                     <div>
-                      <p className="font-bold text-slate-800 text-sm">{p.title}</p>
-                      <p className="text-slate-400 text-sm">{p.desc}</p>
+                      <p className="font-black text-foreground text-sm uppercase tracking-tight">{p.title}</p>
+                      <p className="text-muted text-sm leading-relaxed">{p.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -158,19 +164,18 @@ export default function TaskerApplyPage() {
             </div>
 
             {/* Right: Skills Selection */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-              <h2 className="text-xl font-black text-slate-900 mb-2" style={{ fontFamily: "var(--font-jakarta)" }}>
-                What services do you offer?
+            <div className="bg-foreground/[0.02] rounded-[2.5rem] border border-border p-8 backdrop-blur-xl shadow-2xl">
+              <h2 className="text-2xl font-black text-foreground mb-2" style={{ fontFamily: "var(--font-jakarta)" }}>
+                What do you offer?
               </h2>
-              <p className="text-slate-400 text-sm mb-6">Select all that apply. You can update this later.</p>
+              <p className="text-muted text-sm mb-8">Select all that apply. You can update this later.</p>
 
-              <div className="grid grid-cols-2 gap-2 mb-8">
+              <div className="grid grid-cols-2 gap-3 mb-10">
                 {categories.map(cat => {
                   const selected = selectedSkills.includes(cat);
                   return (
                     <button key={cat} onClick={() => toggleSkill(cat)}
-                      className={`flex items-center gap-2 px-3 py-3 rounded-xl border-2 text-sm font-semibold text-left transition-all ${selected ? "border-orange-500 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-600 hover:border-slate-300"}`}>
-                      {selected && <CheckCircle className="w-4 h-4 flex-shrink-0" />}
+                      className={`flex flex-col items-center gap-2 p-5 rounded-3xl border-2 text-xs font-black uppercase tracking-tight text-center transition-all ${selected ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-muted hover:border-primary/20"}`}>
                       {cat}
                     </button>
                   );
@@ -178,8 +183,8 @@ export default function TaskerApplyPage() {
               </div>
 
               <button onClick={() => setStep(1)} disabled={selectedSkills.length === 0}
-                className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-40 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-orange-100 hover:-translate-y-0.5 text-base">
-                Continue to Account Setup <ArrowRight className="w-5 h-5" />
+                className="w-full flex items-center justify-center gap-3 bg-primary hover:bg-primary-dark disabled:opacity-40 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-primary/20 hover:-translate-y-0.5 text-base uppercase tracking-wider">
+                Continue to Setup <ArrowRight className="w-5 h-5" />
               </button>
               {selectedSkills.length === 0 && (
                 <p className="text-slate-400 text-xs text-center mt-2">Please select at least one service</p>
@@ -195,63 +200,63 @@ export default function TaskerApplyPage() {
               <ArrowLeft className="w-4 h-4" /> Back
             </button>
 
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-              <h2 className="text-2xl font-black text-slate-900 mb-1" style={{ fontFamily: "var(--font-jakarta)" }}>
-                Create your account
+            <div className="bg-foreground/[0.02] rounded-[2.5rem] border border-border p-10 backdrop-blur-xl shadow-2xl">
+              <h2 className="text-3xl font-black text-foreground mb-1" style={{ fontFamily: "var(--font-jakarta)" }}>
+                Setup account
               </h2>
-              <p className="text-slate-400 text-sm mb-6">You're applying as a <strong className="text-orange-600">tasker</strong> — {selectedSkills.join(", ")}</p>
+              <p className="text-muted text-sm mb-10">Application as <strong className="text-primary uppercase tracking-wider">tasker</strong></p>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3 mb-5">{error}</div>
+                <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-sm rounded-2xl px-5 py-4 mb-6">{error}</div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Full Name</label>
+                  <label className="block text-[10px] font-black text-muted mb-2 uppercase tracking-[0.2em]">Full Name</label>
                   <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                     <input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Kwame Asante" required
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-50 outline-none text-sm" />
+                      className="w-full pl-12 pr-4 py-4 rounded-2xl border border-border bg-background outline-none text-sm font-bold text-foreground focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Email Address</label>
+                  <label className="block text-[10px] font-black text-muted mb-2 uppercase tracking-[0.2em]">Email Address</label>
                   <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                     <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="kwame@example.com" required
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-50 outline-none text-sm" />
+                      className="w-full pl-12 pr-4 py-4 rounded-2xl border border-border bg-background outline-none text-sm font-bold text-foreground focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Password</label>
+                  <label className="block text-[10px] font-black text-muted mb-2 uppercase tracking-[0.2em]">Password</label>
                   <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                     <input value={password} onChange={e => setPassword(e.target.value)}
-                      type={showPassword ? "text" : "password"} placeholder="Min. 8 characters" required
-                      className="w-full pl-10 pr-11 py-3 rounded-xl border border-slate-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-50 outline-none text-sm" />
+                      type={showPassword ? "text" : "password"} placeholder="••••••••" required
+                      className="w-full pl-12 pr-12 py-4 rounded-2xl border border-border bg-background outline-none text-sm font-bold text-foreground focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
 
-                <label className="flex items-start gap-3 cursor-pointer">
+                <label className="flex items-start gap-4 cursor-pointer pt-2">
                   <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
-                    className="mt-0.5 rounded border-slate-300 text-orange-500 focus:ring-orange-400" />
-                  <span className="text-xs text-slate-500 leading-relaxed">
+                    className="mt-1 rounded border-border bg-background text-primary focus:ring-primary outline-none" />
+                  <span className="text-xs text-muted leading-relaxed font-semibold">
                     I agree to TaskGH's{" "}
-                    <Link href="/terms" className="text-blue-600 hover:underline font-medium">Terms of Service</Link>
+                    <Link href="/terms" className="text-primary hover:underline font-bold">Terms</Link>
                     {" "}and{" "}
-                    <Link href="/privacy" className="text-blue-600 hover:underline font-medium">Privacy Policy</Link>
+                    <Link href="/privacy" className="text-primary hover:underline font-bold">Privacy Policy</Link>
                   </span>
                 </label>
 
                 <button onClick={handleSubmit} disabled={submitting || !fullName || !email || !password || !agreed}
-                  className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-40 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-orange-100 hover:-translate-y-0.5 text-base">
-                  {submitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Creating account…</> : <>Apply as Tasker <ArrowRight className="w-5 h-5" /></>}
+                  className="w-full flex items-center justify-center gap-3 bg-primary hover:bg-primary-dark disabled:opacity-40 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-primary/20 hover:-translate-y-0.5 text-base uppercase tracking-wider">
+                  {submitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing…</> : <>Submit Application <ArrowRight className="w-5 h-5" /></>}
                 </button>
               </div>
             </div>

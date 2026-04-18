@@ -6,26 +6,39 @@
   --color-foreground: var(--foreground);
   --font-sans: 'Inter', sans-serif;
 
-  /* Modern Tech Theme */
-  --color-primary: #4F46E5; /* Indigo 600 */
-  --color-primary-dark: #3730A3; /* Indigo 800 */
-  --color-primary-light: #818CF8; /* Indigo 400 */
-  --color-accent: #22D3EE; /* Cyan 400 (Neon Accent) */
-  --color-accent-dark: #0891B2; /* Cyan 600 */
-  --color-accent-light: #A5F3FC; /* Cyan 200 */
+  /* Modern White & Green Theme */
+  --color-primary: #16A34A; /* Green 600 */
+  --color-primary-dark: #15803D; /* Green 700 */
+  --color-primary-light: #4ADE80; /* Green 400 */
+  --color-accent: #84CC16; /* Lime 500 (Vibrant Accent) */
+  --color-accent-dark: #65A30D; /* Lime 600 */
+  --color-accent-light: #BEF264; /* Lime 300 */
   --color-midnight: #020617; /* Slate 950 */
   --color-success: #10B981;
   --color-warning: #F59E0B;
   --color-error: #EF4444;
 
   /* Glassmorphism & Effects */
-  --shadow-neon: 0 0 15px rgba(34, 211, 238, 0.4);
-  --shadow-indigo: 0 0 25px rgba(79, 70, 229, 0.3);
+  --shadow-neon: 0 0 15px rgba(132, 204, 22, 0.4);
+  --shadow-green: 0 0 25px rgba(22, 163, 74, 0.3);
 }
 
 :root {
-  --background: #020617; /* Midnight */
-  --foreground: #F8FAFC; /* Slate 50 */
+  --background: #FFFFFF;
+  --foreground: #020617;
+  --muted: #64748B;
+  --border: #E2E8F0;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.05);
+}
+
+.dark {
+  --background: #020617;
+  --foreground: #F8FAFC;
+  --muted: #94A3B8;
+  --border: #134e4a22; /* Forest-tinted border */
+  --glass-bg: rgba(2, 6, 23, 0.7);
+  --glass-border: rgba(22, 163, 74, 0.05);
 }
 
 * {

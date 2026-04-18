@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 
 export const metadata = {
   title: "Privacy Policy — TaskGH",
@@ -81,24 +82,28 @@ No system is completely foolproof. In the event of a data breach that affects yo
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       <Navbar />
-      <div className="max-w-3xl mx-auto px-4 pt-32 pb-20">
+      <div className="max-w-3xl mx-auto px-4 pt-40 pb-20">
         <div className="mb-10">
-          <Link href="/legal" className="text-xs text-slate-400 hover:text-blue-600 font-medium mb-4 inline-block transition-colors">← Legal</Link>
-          <h1 className="text-4xl font-black text-slate-900 mb-3" style={{ fontFamily: "var(--font-jakarta)" }}>Privacy Policy</h1>
-          <p className="text-slate-400 text-sm">Last updated: April 2025 · Effective date: April 18, 2025</p>
+          <Link href="/about" className="text-[10px] font-black uppercase tracking-widest text-muted hover:text-primary mb-4 inline-block transition-colors">← About</Link>
+          <h1 className="text-4xl lg:text-5xl font-black text-foreground mb-3 tracking-tighter" style={{ fontFamily: "var(--font-jakarta)" }}>Privacy Policy</h1>
+          <p className="text-muted/60 text-[10px] font-black uppercase tracking-widest">Last updated: April 18, 2025</p>
         </div>
 
-        <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-10 text-sm text-blue-800">
-          <strong>Plain-language summary:</strong> We collect your name, contact details, and booking information to make the platform work. We share your basic contact details with your tasker so they can do the job. We don't sell your data. You can ask us to delete your data at any time.
+        <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 mb-12 text-sm text-primary font-medium leading-relaxed">
+          <div className="flex items-center gap-2 mb-2">
+            <ShieldCheck className="w-5 h-5" />
+            <strong className="uppercase tracking-widest text-xs font-black">Plain-language summary</strong>
+          </div>
+          We collect your name, contact details, and booking information to make the platform work. We share your basic contact details with your tasker so they can do the job. We don't sell your data. You can ask us to delete your data at any time.
         </div>
 
         <div className="space-y-10">
           {sections.map(s => (
             <div key={s.title}>
-              <h2 className="text-xl font-bold text-slate-900 mb-3">{s.title}</h2>
-              <div className="text-slate-600 text-sm leading-relaxed whitespace-pre-line space-y-3">
+              <h2 className="text-xl font-black text-foreground mb-3 uppercase tracking-tight">{s.title}</h2>
+              <div className="text-muted text-sm font-medium leading-relaxed whitespace-pre-line space-y-3">
                 {s.content.split("\n\n").map((para, i) => (
                   <p key={i}>{para}</p>
                 ))}
@@ -107,9 +112,8 @@ export default function PrivacyPage() {
           ))}
         </div>
 
-        <div className="mt-16 border-t border-slate-100 pt-8 text-sm text-slate-400">
-          Questions? Contact us at{" "}
-          <a href="mailto:privacy@taskgh.com" className="text-blue-600 hover:underline font-medium">privacy@taskgh.com</a>
+        <div className="mt-16 border-t border-border pt-8 text-[10px] font-black uppercase tracking-[0.2em] text-muted">
+          Questions? Contact <a href="mailto:privacy@taskgh.com" className="text-primary hover:underline">privacy@taskgh.com</a>
         </div>
       </div>
     </div>

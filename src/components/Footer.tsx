@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-midnight border-t border-white/5 py-16">
+    <footer className="bg-background border-t border-border py-16 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 lg:col-span-1">
@@ -13,7 +13,7 @@ export default function Footer() {
                 className="h-10 w-auto object-contain bg-white rounded-lg p-1"
               />
             </div>
-            <p className="text-slate-400 text-sm leading-relaxed">
+            <p className="text-muted text-sm leading-relaxed">
               Ghana's most trusted marketplace for professional home services.
             </p>
           </div>
@@ -49,11 +49,11 @@ export default function Footer() {
             },
           ].map((col) => (
             <div key={col.title}>
-              <h4 className="text-white font-semibold text-sm mb-4">{col.title}</h4>
+              <h4 className="text-foreground font-semibold text-sm mb-4">{col.title}</h4>
               <ul className="space-y-2">
                 {col.links.map((l) => (
                   <li key={l.label}>
-                    <Link href={l.href} className="text-slate-400 text-sm hover:text-white transition-colors">
+                    <Link href={l.href} className="text-muted text-sm hover:text-primary transition-colors">
                       {l.label}
                     </Link>
                   </li>
@@ -62,7 +62,7 @@ export default function Footer() {
             </div>
           ))}
         </div>
-        <div className="border-t border-slate-800 pt-6 text-center text-slate-500 text-sm">
+        <div className="border-t border-border pt-6 text-center text-muted text-sm">
           © {new Date().getFullYear()} TaskGH. All rights reserved. Made with ❤️ in Ghana.
         </div>
       </div>

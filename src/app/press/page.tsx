@@ -36,20 +36,24 @@ export const metadata = {
 
 export default function PressPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-4 bg-gradient-to-br from-blue-50 via-white to-orange-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold px-4 py-1.5 rounded-full mb-6 uppercase tracking-wider">
-            <Newspaper className="w-3.5 h-3.5" /> Media & Press
+      <section className="pt-40 pb-20 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+          <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-primary/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-accent/10 rounded-full blur-[120px]" />
+        </div>
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary text-[10px] font-black px-5 py-2 rounded-full mb-8 uppercase tracking-[0.2em] shadow-inner">
+            <Newspaper className="w-3.5 h-3.5" /> Media Relations
           </div>
-          <h1 className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight mb-6" style={{ fontFamily: "var(--font-jakarta)" }}>
-            TaskGH in the news
+          <h1 className="text-4xl lg:text-7xl font-black text-foreground leading-tight mb-8 uppercase tracking-tighter" style={{ fontFamily: "var(--font-jakarta)" }}>
+            TaskGH News
           </h1>
-          <p className="text-lg text-slate-500 max-w-xl mx-auto leading-relaxed">
-            Resources for journalists, bloggers, and content creators covering the TaskGH story.
+          <p className="text-xl text-muted max-w-xl mx-auto leading-relaxed font-medium">
+            Resources for the press, creators, and partners covering our growth in Ghana.
           </p>
         </div>
       </section>
@@ -57,47 +61,47 @@ export default function PressPage() {
       <div className="max-w-5xl mx-auto px-4 py-16 grid lg:grid-cols-3 gap-10">
         {/* Press Releases */}
         <div className="lg:col-span-2">
-          <h2 className="text-2xl font-black text-slate-900 mb-6" style={{ fontFamily: "var(--font-jakarta)" }}>Press Releases</h2>
-          <div className="space-y-5">
+          <h2 className="text-[10px] font-black text-muted uppercase tracking-[0.2em] mb-10 ml-1">Official Releases</h2>
+          <div className="space-y-6">
             {pressReleases.map(p => (
-              <div key={p.title} className="border border-slate-200 rounded-2xl p-5 hover:border-blue-200 hover:shadow-sm transition-all">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{p.date}</p>
-                <h3 className="font-bold text-slate-800 mb-2">{p.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{p.excerpt}</p>
+              <div key={p.title} className="bg-foreground/[0.02] border border-border rounded-[2.5rem] p-8 hover:border-primary/50 transition-all group">
+                <p className="text-[10px] font-black text-muted/40 uppercase tracking-widest mb-3">{p.date}</p>
+                <h3 className="text-lg font-black text-foreground mb-3 uppercase tracking-tight group-hover:text-primary transition-colors">{p.title}</h3>
+                <p className="text-muted text-sm font-medium leading-relaxed">{p.excerpt}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Fast Facts */}
-          <div className="bg-slate-50 rounded-2xl p-5">
-            <h3 className="font-black text-slate-900 mb-4 text-sm uppercase tracking-wider">Fast Facts</h3>
-            <div className="space-y-2">
+          <div className="bg-foreground/[0.02] border border-border rounded-[2.5rem] p-8 shadow-inner">
+            <h3 className="text-[10px] font-black text-muted uppercase tracking-[0.2em] mb-8">Snapshot</h3>
+            <div className="space-y-4">
               {facts.map(f => (
-                <div key={f.label} className="flex justify-between text-sm border-b border-slate-100 pb-2 last:border-0 last:pb-0">
-                  <span className="text-slate-500">{f.label}</span>
-                  <span className="font-bold text-slate-800">{f.value}</span>
+                <div key={f.label} className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest border-b border-border/50 pb-3 last:border-0 last:pb-0">
+                  <span className="text-muted/40">{f.label}</span>
+                  <span className="text-foreground">{f.value}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Media Kit */}
-          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
-            <h3 className="font-black text-slate-900 mb-2 text-sm">Brand Assets</h3>
-            <p className="text-slate-500 text-sm mb-4">Download official logos, product screenshots, and brand guidelines for media use.</p>
-            <a href="/media-kit.zip" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-colors">
-              <Download className="w-4 h-4" /> Download Media Kit
+          <div className="bg-primary border border-primary/20 rounded-[2.5rem] p-8 shadow-2xl shadow-primary/20">
+            <h3 className="text-[10px] font-black text-white uppercase tracking-[0.2em] mb-3">Brand Assets</h3>
+            <p className="text-white/70 text-sm font-medium mb-8 leading-relaxed">Official logos, product renders, and brand guidelines.</p>
+            <a href="/media-kit.zip" className="flex items-center justify-center gap-3 bg-white text-primary text-[10px] font-black py-5 px-6 rounded-2xl hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
+              <Download className="w-4 h-4" /> Download Kit
             </a>
           </div>
 
           {/* Press Contact */}
-          <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5">
-            <h3 className="font-black text-slate-900 mb-2 text-sm">Press Enquiries</h3>
-            <p className="text-slate-500 text-sm mb-3">We respond to all media requests within 24 hours on business days.</p>
-            <a href="mailto:press@taskgh.com" className="flex items-center gap-2 text-blue-600 font-bold text-sm hover:underline">
+          <div className="bg-accent/10 border border-accent/20 rounded-[2.5rem] p-8">
+            <h3 className="text-[10px] font-black text-accent uppercase tracking-[0.2em] mb-3">Contact</h3>
+            <p className="text-muted text-sm font-medium mb-8 leading-relaxed">Media inquiries are prioritized and processed within 24 hours.</p>
+            <a href="mailto:press@taskgh.com" className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest hover:underline">
               <Mail className="w-4 h-4" /> press@taskgh.com
             </a>
           </div>
