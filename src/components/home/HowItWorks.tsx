@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import { Search, ListChecks, CalendarCheck, ShieldCheck } from "lucide-react";
 
+const steps = [
   {
     title: "1. Tell us what you need",
     desc: "Simply describe the job. Whether it's plumbing, cleaning, or a quick repair, we have the right person for you.",
