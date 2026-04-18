@@ -197,15 +197,41 @@ export default function HomePage() {
               <p className="text-slate-400 text-sm leading-relaxed">Ghana's most trusted marketplace for professional home services.</p>
             </div>
             {[
-              { title: "Services", links: ["Plumbing", "Electrical", "Cleaning", "Moving"] },
-              { title: "Company", links: ["About Us", "Blog", "Careers", "Press"] },
-              { title: "Legal", links: ["Privacy Policy", "Terms of Service", "Cookie Policy"] },
+              {
+                title: "Services",
+                links: [
+                  { label: "Plumbing", href: "/booking?category=plumbing" },
+                  { label: "Electrical", href: "/booking?category=electrical" },
+                  { label: "Cleaning", href: "/booking?category=cleaning" },
+                  { label: "Moving Help", href: "/booking?category=moving" },
+                  { label: "All Services", href: "/booking" },
+                ],
+              },
+              {
+                title: "Company",
+                links: [
+                  { label: "About Us", href: "/about" },
+                  { label: "Blog", href: "/blog" },
+                  { label: "Careers", href: "/careers" },
+                  { label: "Press", href: "/press" },
+                  { label: "Become a Tasker", href: "/tasker/apply" },
+                ],
+              },
+              {
+                title: "Legal",
+                links: [
+                  { label: "Legal Hub", href: "/legal" },
+                  { label: "Privacy Policy", href: "/privacy" },
+                  { label: "Terms of Service", href: "/terms" },
+                  { label: "Cookie Policy", href: "/cookies" },
+                ],
+              },
             ].map((col) => (
               <div key={col.title}>
                 <h4 className="text-white font-semibold text-sm mb-4">{col.title}</h4>
                 <ul className="space-y-2">
                   {col.links.map((l) => (
-                    <li key={l}><Link href="#" className="text-slate-400 text-sm hover:text-white transition-colors">{l}</Link></li>
+                    <li key={l.label}><Link href={l.href} className="text-slate-400 text-sm hover:text-white transition-colors">{l.label}</Link></li>
                   ))}
                 </ul>
               </div>
