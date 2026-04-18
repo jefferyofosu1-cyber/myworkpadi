@@ -113,7 +113,7 @@ export default function AboutPage() {
               <div key={m.name} className="text-center group">
                 <div className={`w-32 h-32 ${m.color} rounded-3xl flex items-center justify-center text-white text-3xl font-black mx-auto mb-4 overflow-hidden shadow-xl ring-4 ring-white transition-transform group-hover:scale-105`}>
                   {m.image ? (
-                    <img src={m.image} alt={m.name} className="w-full h-full object-cover" />
+                    <img src={m.image} alt={m.name} className="w-full h-full object-cover object-top" />
                   ) : (
                     m.initials
                   )}
