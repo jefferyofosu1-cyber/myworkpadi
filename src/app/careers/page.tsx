@@ -85,35 +85,22 @@ export default function CareersPage() {
 
       {/* Open Roles */}
       <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-black text-slate-900 mb-8" style={{ fontFamily: "var(--font-jakarta)" }}>Open Positions</h2>
-          <div className="space-y-4">
-            {openRoles.map(role => (
-              <div key={role.title} className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-blue-200 hover:shadow-md transition-all group">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      <span className="text-xs font-bold bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full">{role.team}</span>
-                      <span className="text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full">{role.type}</span>
-                      <span className="text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full">{role.location}</span>
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">{role.title}</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed">{role.desc}</p>
-                  </div>
-                  <a href={`mailto:careers@taskgh.com?subject=Application: ${role.title}`}
-                    className="flex-shrink-0 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all group-hover:-translate-y-0.5">
-                    Apply <ArrowRight className="w-4 h-4" />
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 bg-slate-50 rounded-2xl p-6 text-center">
-            <p className="text-slate-600 font-medium mb-1">Don't see a role that fits?</p>
-            <p className="text-slate-400 text-sm mb-4">We're always interested in exceptional people. Send us a note.</p>
-            <a href="mailto:careers@taskgh.com" className="inline-flex items-center gap-2 text-blue-600 font-bold text-sm hover:underline">
-              careers@taskgh.com <ArrowRight className="w-3.5 h-3.5" />
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl font-black text-slate-900 mb-4" style={{ fontFamily: "var(--font-jakarta)" }}>Join our journey</h2>
+          <p className="text-slate-500 text-base mb-10 max-w-lg mx-auto">
+            We are currently scaling our operations and not actively recruiting for new roles. However, we're always looking for exceptional talent to join our future team.
+          </p>
+          
+          <div className="bg-slate-50 rounded-3xl p-10 border border-slate-100">
+            <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Users className="w-8 h-8 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Want to be notified?</h3>
+            <p className="text-slate-500 text-sm mb-8">
+              Send us your CV and a brief note about why you're interested in TaskGH. We'll reach out when a role matches your expertise.
+            </p>
+            <a href="mailto:careers@taskgh.com" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 rounded-2xl transition-all hover:-translate-y-0.5 shadow-lg shadow-blue-100">
+              Drop your CV <ArrowRight className="w-4 h-4" />
             </a>
           </div>
         </div>

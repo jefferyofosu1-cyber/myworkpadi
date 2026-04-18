@@ -17,10 +17,7 @@ const values = [
 ];
 
 const team = [
-  { name: "Jeffery Ofosu", title: "Founder & CEO", initials: "JO", color: "bg-blue-600" },
-  { name: "Akosua Mensah", title: "Head of Operations", initials: "AM", color: "bg-orange-500" },
-  { name: "Kwesi Boateng", title: "Head of Technology", initials: "KB", color: "bg-purple-600" },
-  { name: "Abena Asante", title: "Head of Tasker Success", initials: "AA", color: "bg-green-600" },
+  { name: "Jeffery Impraim", title: "Founder & CEO", initials: "JI", color: "bg-blue-600" },
 ];
 
 export const metadata = {
@@ -104,7 +101,7 @@ export default function AboutPage() {
       <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-black text-slate-900 mb-3 text-center" style={{ fontFamily: "var(--font-jakarta)" }}>The team behind TaskGH</h2>
-          <p className="text-slate-400 text-center text-sm mb-12">A small, focused group of builders, operators, and believers.</p>
+          <p className="text-slate-400 text-center text-sm mb-12">Building the future of skilled work in Ghana.</p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {team.map(m => (
               <div key={m.name} className="text-center">
