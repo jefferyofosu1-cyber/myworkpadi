@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import { ArrowRight, Briefcase, Globe, Zap, Users } from "lucide-react";
+import { ArrowRight, Briefcase, Globe, Zap, Users, TrendingUp } from "lucide-react";
 
 export const metadata = {
   title: "Careers — TaskGH",
