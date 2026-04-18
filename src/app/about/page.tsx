@@ -17,7 +17,13 @@ const values = [
 ];
 
 const team = [
-  { name: "Jeffery Impraim", title: "Founder & CEO", initials: "JI", color: "bg-blue-600" },
+  { 
+    name: "Jeffery Impraim", 
+    title: "Founder & CEO", 
+    initials: "JI", 
+    color: "bg-blue-600",
+    image: "/founder.jpg"
+  },
 ];
 
 export const metadata = {
@@ -104,12 +110,16 @@ export default function AboutPage() {
           <p className="text-slate-400 text-center text-sm mb-12">Building the future of skilled work in Ghana.</p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {team.map(m => (
-              <div key={m.name} className="text-center">
-                <div className={`w-20 h-20 ${m.color} rounded-2xl flex items-center justify-center text-white text-2xl font-black mx-auto mb-4`}>
-                  {m.initials}
+              <div key={m.name} className="text-center group">
+                <div className={`w-32 h-32 ${m.color} rounded-3xl flex items-center justify-center text-white text-3xl font-black mx-auto mb-4 overflow-hidden shadow-xl ring-4 ring-white transition-transform group-hover:scale-105`}>
+                  {m.image ? (
+                    <img src={m.image} alt={m.name} className="w-full h-full object-cover" />
+                  ) : (
+                    m.initials
+                  )}
                 </div>
-                <p className="font-bold text-slate-800">{m.name}</p>
-                <p className="text-slate-400 text-sm">{m.title}</p>
+                <p className="font-black text-slate-800 text-lg">{m.name}</p>
+                <p className="text-blue-600 font-bold text-xs uppercase tracking-widest">{m.title}</p>
               </div>
             ))}
           </div>
