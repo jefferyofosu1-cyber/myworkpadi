@@ -6,21 +6,26 @@
   --color-foreground: var(--foreground);
   --font-sans: 'Inter', sans-serif;
 
-  /* Brand Colors */
-  --color-primary: #2563EB;
-  --color-primary-dark: #1D4ED8;
-  --color-primary-light: #DBEAFE;
-  --color-accent: #F97316;
-  --color-accent-dark: #EA580C;
-  --color-accent-light: #FFEDD5;
+  /* Modern Tech Theme */
+  --color-primary: #4F46E5; /* Indigo 600 */
+  --color-primary-dark: #3730A3; /* Indigo 800 */
+  --color-primary-light: #818CF8; /* Indigo 400 */
+  --color-accent: #22D3EE; /* Cyan 400 (Neon Accent) */
+  --color-accent-dark: #0891B2; /* Cyan 600 */
+  --color-accent-light: #A5F3FC; /* Cyan 200 */
+  --color-midnight: #020617; /* Slate 950 */
   --color-success: #10B981;
   --color-warning: #F59E0B;
   --color-error: #EF4444;
+
+  /* Glassmorphism & Effects */
+  --shadow-neon: 0 0 15px rgba(34, 211, 238, 0.4);
+  --shadow-indigo: 0 0 25px rgba(79, 70, 229, 0.3);
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #0F172A;
+  --background: #020617; /* Midnight */
+  --foreground: #F8FAFC; /* Slate 50 */
 }
 
 * {
@@ -61,4 +66,9 @@ a, button {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
+}
+
+@keyframes shimmer {
+  from { background-position: 0% center; }
+  to { background-position: -200% center; }
 }
