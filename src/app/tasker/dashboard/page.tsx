@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
   CheckCircle, Clock, DollarSign, Star, Briefcase, TrendingUp,
-  AlertCircle, Wallet, CalendarDays, Award, ChevronRight, ArrowUpRight
+  AlertCircle, Wallet, CalendarDays, Award, ChevronRight, ArrowUpRight, Zap
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { calculateTaskerPayout, formatGHS } from "@/lib/pricing";
