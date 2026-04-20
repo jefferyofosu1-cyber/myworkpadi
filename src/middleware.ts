@@ -1,11 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // Skip auth checks if Supabase is not configured (e.g. local dev without credentials)
+  // Skip auth checks if Supabase is not configured
   if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.startsWith("your_")) {
     return NextResponse.next({ request });
   }
@@ -35,7 +35,7 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Public routes that share a protected prefix — must be whitelisted first
+  // Public routes that share a protected prefix
   const publicPaths = ["/tasker/apply"];
   if (publicPaths.some(p => pathname.startsWith(p))) {
     return supabaseResponse;
@@ -73,10 +73,14 @@ export async function proxy(request: NextRequest) {
     if (!hasAccess) {
       // Redirect to their respective dashboard if they try to access another role's area
       const url = request.nextUrl.clone();
-      if (role === "admin") url.pathname = "/admin/dashboard";
+      if (role === "admin") url.pathname = "/admin";
       else if (role === "tasker") url.pathname = "/tasker/dashboard";
       else url.pathname = "/customer/dashboard";
-      return NextResponse.redirect(url);
+      
+      // CRITICAL: Prevent infinite redirect loop
+      if (url.pathname !== pathname) {
+        return NextResponse.redirect(url);
+      }
     }
   }
 
@@ -91,10 +95,13 @@ export async function proxy(request: NextRequest) {
 
     const role = profile?.role;
     const url = request.nextUrl.clone();
-    if (role === "admin") url.pathname = "/admin/dashboard";
+    if (role === "admin") url.pathname = "/admin";
     else if (role === "tasker") url.pathname = "/tasker/dashboard";
     else url.pathname = "/customer/dashboard";
-    return NextResponse.redirect(url);
+    
+    if (url.pathname !== pathname) {
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

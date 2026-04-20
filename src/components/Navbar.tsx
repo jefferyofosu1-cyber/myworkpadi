@@ -46,9 +46,9 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled 
-          ? "bg-background/80 backdrop-blur-xl border-b border-border shadow-2xl" 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled
+          ? "bg-white/90 dark:bg-slate-950/90 glass border-b border-gray-200 dark:border-slate-800 shadow-lg"
           : "bg-transparent"
       }`}
     >
@@ -56,50 +56,50 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center group">
-            <img 
-              src="/logo.jpg" 
-              alt="TaskGH Logo" 
-              className="h-10 w-auto object-contain bg-white rounded-lg p-1 group-hover:shadow-neon transition-all"
+            <img
+              src="/logo.jpg"
+              alt="TaskGH Logo"
+              className="h-10 w-auto object-contain bg-white rounded-friendly p-1 group-hover:shadow-green transition-all"
             />
           </Link>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-10">
-            <Link href="/#services" className="text-sm font-semibold text-muted hover:text-primary transition-colors">Services</Link>
-            <Link href="/#how-it-works" className="text-sm font-semibold text-muted hover:text-primary transition-colors">How it works</Link>
-            <Link href="/tasker/apply" className="text-sm font-semibold text-muted hover:text-primary transition-colors">Become a Tasker</Link>
+            <Link href="/#services" className="text-sm font-bold text-gray-600 dark:text-slate-200 hover:text-primary transition-colors uppercase tracking-wide">Services</Link>
+            <Link href="/#how-it-works" className="text-sm font-bold text-gray-600 dark:text-slate-200 hover:text-primary transition-colors uppercase tracking-wide">How it Works</Link>
+            <Link href="/tasker/apply" className="text-sm font-bold text-gray-600 dark:text-slate-200 hover:text-primary transition-colors uppercase tracking-wide">Become a Tasker</Link>
           </div>
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-6">
             <ThemeToggle />
-            
+
             {user ? (
               <div className="flex items-center gap-6">
                 <Link
                   href={user.role === "tasker" ? "/tasker/dashboard" : "/customer/dashboard"}
-                  className="text-sm font-semibold text-muted hover:text-primary transition-colors"
+                  className="text-sm font-bold text-gray-600 dark:text-slate-200 hover:text-primary transition-colors uppercase tracking-wide"
                 >
                   Dashboard
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="text-sm font-semibold text-muted hover:text-red-400 transition-colors"
+                  className="text-sm font-bold text-gray-600 dark:text-slate-200 hover:text-red-500 transition-colors uppercase tracking-wide"
                 >
-                  Sign out
+                  Sign Out
                 </button>
               </div>
             ) : (
               <>
                 <Link
                   href="/login"
-                  className="text-sm font-bold text-muted hover:text-foreground transition-colors"
+                  className="text-sm font-bold text-gray-600 dark:text-slate-200 hover:text-black transition-colors uppercase tracking-wide"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/booking"
-                  className="text-sm font-bold text-white bg-primary hover:bg-primary-dark transition-all px-6 py-3 rounded-2xl shadow-green hover:shadow-neon hover:-translate-y-1 active:scale-95"
+                  className="text-sm font-bold text-white bg-primary hover:bg-primary-dark transition-all px-6 py-3 rounded-friendly shadow-lg hover:shadow-green hover:-translate-y-1 active:scale-95 uppercase tracking-wide"
                 >
                   Book a Task
                 </Link>
@@ -111,7 +111,7 @@ export default function Navbar() {
           <div className="flex items-center gap-4 md:hidden">
             <ThemeToggle />
             <button
-              className="p-2 rounded-xl text-muted hover:bg-background/10 transition-colors"
+              className="p-2 rounded-friendly text-gray-600 dark:text-slate-200 hover:bg-tint transition-colors"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Toggle menu"
             >
@@ -123,21 +123,21 @@ export default function Navbar() {
 
       {/* Mobile Drawer */}
       {menuOpen && (
-        <div className="md:hidden bg-background border-t border-border shadow-2xl overflow-hidden">
+        <div className="md:hidden bg-background dark:bg-slate-950 border-t border-border shadow-lg overflow-hidden">
           <div className="px-6 py-8 flex flex-col gap-6">
-            <Link href="/#services" className="text-base font-bold text-muted" onClick={() => setMenuOpen(false)}>Services</Link>
-            <Link href="/#how-it-works" className="text-base font-bold text-muted" onClick={() => setMenuOpen(false)}>How it works</Link>
-            <Link href="/tasker/apply" className="text-base font-bold text-muted" onClick={() => setMenuOpen(false)}>Become a Tasker</Link>
-            <div className="border-t border-border pt-6 flex flex-col gap-4">
+            <Link href="/#services" className="text-base font-bold text-gray-600 dark:text-slate-200 uppercase tracking-wide" onClick={() => setMenuOpen(false)}>Services</Link>
+            <Link href="/#how-it-works" className="text-base font-bold text-gray-600 dark:text-slate-200 uppercase tracking-wide" onClick={() => setMenuOpen(false)}>How it Works</Link>
+            <Link href="/tasker/apply" className="text-base font-bold text-gray-600 dark:text-slate-200 uppercase tracking-wide" onClick={() => setMenuOpen(false)}>Become a Tasker</Link>
+            <div className="border-t border-gray-200 pt-6 flex flex-col gap-4">
               {user ? (
                 <>
-                  <Link href={user.role === "tasker" ? "/tasker/dashboard" : "/customer/dashboard"} className="text-center py-4 rounded-2xl bg-primary text-white font-bold" onClick={() => setMenuOpen(false)}>Dashboard</Link>
-                  <button onClick={handleSignOut} className="text-center py-4 rounded-2xl border border-border text-muted font-bold">Sign Out</button>
+                  <Link href={user.role === "tasker" ? "/tasker/dashboard" : "/customer/dashboard"} className="text-center py-4 rounded-friendly bg-primary text-white font-bold shadow-lg hover:shadow-green" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+                  <button onClick={handleSignOut} className="text-center py-4 rounded-friendly border border-border text-gray-600 dark:text-slate-200 font-bold hover:bg-tint">Sign Out</button>
                 </>
               ) : (
                 <>
-                  <Link href="/booking" className="text-center py-4 rounded-2xl bg-primary text-white font-bold shadow-green" onClick={() => setMenuOpen(false)}>Book a Task</Link>
-                  <Link href="/login" className="text-center py-4 rounded-2xl border border-border text-muted font-bold" onClick={() => setMenuOpen(false)}>Sign In</Link>
+                  <Link href="/booking" className="text-center py-4 rounded-friendly bg-primary text-white font-bold shadow-lg hover:shadow-green" onClick={() => setMenuOpen(false)}>Book a Task</Link>
+                  <Link href="/login" className="text-center py-4 rounded-friendly border border-border text-gray-600 dark:text-slate-200 font-bold hover:bg-tint" onClick={() => setMenuOpen(false)}>Sign In</Link>
                 </>
               )}
             </div>

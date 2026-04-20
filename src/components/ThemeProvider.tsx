@@ -11,15 +11,17 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
+const isTheme = (value: unknown): value is Theme =>
+  value === "light" || value === "dark" || value === "system";
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("taskgh-theme") as Theme;
-    if (savedTheme) {
-      setThemeState(savedTheme);
-    }
-  }, []);
+const getInitialTheme = (): Theme => {
+  if (typeof window === "undefined") return "system";
+  const savedTheme = localStorage.getItem("taskgh-theme");
+  return isTheme(savedTheme) ? savedTheme : "system";
+};
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);

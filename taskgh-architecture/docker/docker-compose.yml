@@ -1,0 +1,264 @@
+version: '3.9'
+
+services:
+  # ============================================
+  # APPLICATION SERVICE
+  # ============================================
+  app:
+    build:
+      context: ../..
+      dockerfile: taskgh-architecture/docker/Dockerfile.dev
+    container_name: taskgh-app
+    ports:
+      - "3000:3000"
+      - "9229:9229" # Node debugging port
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      
+      # Database
+      DATABASE_URL: postgresql://taskgh_dev:taskgh_password_dev@postgres:5432/taskgh_dev
+      
+      # Redis
+      REDIS_URL: redis://redis:6379
+      
+      # Supabase (optional, local development)
+      NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+      
+      # AWS S3 (local)
+      AWS_REGION: eu-west-1
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_S3_BUCKET: taskgh-dev
+      AWS_S3_ENDPOINT: http://minio:9000
+      
+      # Payments
+      HUBTEL_API_KEY: dev-key
+      
+      # Logging
+      LOG_LEVEL: debug
+      LOG_FORMAT: json
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    
+    volumes:
+      - ../..:/app
+      - /app/node_modules
+    
+    networks:
+      - taskgh
+    
+    command: npm run dev
+
+  # ============================================
+  # POSTGRESQL DATABASE
+  # ============================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: taskgh-postgres
+    environment:
+      POSTGRES_USER: taskgh_dev
+      POSTGRES_PASSWORD: taskgh_password_dev
+      POSTGRES_DB: taskgh_dev
+      POSTGRES_INITDB_ARGS: "-c shared_preload_libraries=pg_stat_statements"
+    
+    ports:
+      - "5432:5432"
+    
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskgh_dev -d taskgh_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    networks:
+      - taskgh
+
+  # ============================================
+  # REDIS CACHE & MESSAGE QUEUE
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: taskgh-redis
+    command: redis-server --appendonly yes --requirepass redis_password_dev
+    
+    ports:
+      - "6379:6379"
+    
+    volumes:
+      - redis_data:/data
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    networks:
+      - taskgh
+
+  # ============================================
+  # MINIO (LOCAL S3 COMPATIBLE STORAGE)
+  # ============================================
+  minio:
+    image: minio/minio:latest
+    container_name: taskgh-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    
+    volumes:
+      - minio_data:/data
+    
+    command: server /data --console-address ":9001"
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    networks:
+      - taskgh
+
+  # ============================================
+  # ELASTICSEARCH (LOCAL DEVELOPMENT ONLY)
+  # ============================================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+    container_name: taskgh-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    
+    networks:
+      - taskgh
+
+  # ============================================
+  # PROMETHEUS (METRICS COLLECTION)
+  # ============================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: taskgh-prometheus
+    
+    ports:
+      - "9090:9090"
+    
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+    
+    networks:
+      - taskgh
+
+  # ============================================
+  # GRAFANA (VISUALIZATION)
+  # ============================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: taskgh-grafana
+    
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    
+    ports:
+      - "3001:3000"
+    
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    
+    depends_on:
+      - prometheus
+    
+    networks:
+      - taskgh
+
+  # ============================================
+  # JAEGER (DISTRIBUTED TRACING)
+  # ============================================
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: taskgh-jaeger
+    
+    ports:
+      - "6831:6831/udp"  # Jaeger agent
+      - "16686:16686"    # Jaeger UI
+      - "14268:14268"    # Jaeger collector
+    
+    environment:
+      COLLECTOR_ZIPKIN_HTTP_PORT: 9411
+    
+    networks:
+      - taskgh
+
+  # ============================================
+  # LOCALSTACK (AWS EMULATION - OPTIONAL)
+  # ============================================
+  localstack:
+    image: localstack/localstack:latest
+    container_name: taskgh-localstack
+    
+    ports:
+      - "4566:4566"
+    
+    environment:
+      SERVICES: s3,iam,secrets-manager,cloudwatch,logs
+      DEBUG: 1
+      DATA_DIR: /tmp/localstack/data
+      LAMBDA_EXECUTOR: docker
+      DOCKER_HOST: unix:///var/run/docker.sock
+    
+    volumes:
+      - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    
+    networks:
+      - taskgh
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  elasticsearch_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  taskgh:
+    driver: bridge

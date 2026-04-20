@@ -15,14 +15,26 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.taskgh.com"),
   title: "TaskGH – Professional Home Services in Ghana",
   description:
     "Book trusted, vetted professionals for cleaning, plumbing, electrical, and more. Ghana's #1 task marketplace.",
   keywords: ["home services", "Ghana", "tasker", "cleaning", "plumbing", "booking"],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "TaskGH – Professional Home Services in Ghana",
     description: "Book trusted professionals for any home task.",
+    url: "https://www.taskgh.com",
+    siteName: "TaskGH",
+    locale: "en_GH",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TaskGH – Professional Home Services in Ghana",
+    description: "Book trusted professionals for any home task.",
   },
 };
 

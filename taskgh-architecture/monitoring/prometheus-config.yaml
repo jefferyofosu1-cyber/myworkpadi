@@ -1,0 +1,342 @@
+# TaskGH Monitoring Stack Configuration
+# Prometheus scrape config, alert rules, and Grafana setup
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'taskgh-prod'
+    environment: 'production'
+
+# AlertManager configuration
+alertmanager:
+  config:
+    global:
+      slack_api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+      pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+    
+    route:
+      receiver: 'default'
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+      routes:
+        # Critical alerts: immediate escalation
+        - match:
+            severity: critical
+          receiver: 'critical'
+          continue: true
+          group_wait: 1s
+        
+        # High priority alerts
+        - match:
+            severity: high
+          receiver: 'high'
+    
+    receivers:
+      - name: 'default'
+        slack_configs:
+          - channel: '#alerts'
+            title: 'Alert: {{ .GroupLabels.alertname }}'
+            text: '{{ .CommonAnnotations.description }}'
+      
+      - name: 'critical'
+        slack_configs:
+          - channel: '#critical-alerts'
+            title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+            text: '@channel {{ .CommonAnnotations.description }}'
+        pagerduty_configs:
+          - routing_key: '{{ .GroupLabels.pagerduty_routing_key }}'
+            description: 'AlertName: {{ .GroupLabels.alertname }} | {{ .CommonAnnotations.description }}'
+            severity: 'critical'
+      
+      - name: 'high'
+        slack_configs:
+          - channel: '#alerts'
+            title: '⚠️ HIGH: {{ .GroupLabels.alertname }}'
+            text: '{{ .CommonAnnotations.description }}'
+        email_configs:
+          - to: 'engineering@taskgh.com'
+            smarthost: 'smtp.sendgrid.net:587'
+            auth_username: 'apikey'
+            auth_password: '{{ .Env "SENDGRID_API_KEY" }}'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # ECS task metrics via CloudWatch Agent
+  - job_name: 'ecs-tasks'
+    metrics_path: '/metrics'
+    ec2_sd_configs:
+      - region: 'eu-west-1'
+        port: 9090
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_Name]
+        target_label: instance_name
+
+  # RDS via CloudWatch exporter
+  - job_name: 'rds'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['cloudwatch-exporter:9106']
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'aws_rds.*'
+        action: 'keep'
+
+  # ElastiCache Redis
+  - job_name: 'redis'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  # Node exporter (infrastructure metrics)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Application-level metrics
+  - job_name: 'app'
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['app:3000']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+# Alert rules
+alert_rules_files:
+  - '/etc/prometheus/rules/*.yml'
+
+rule_files:
+  - '/etc/prometheus/alert-rules.yml'
+
+---
+# alert-rules.yml - Alert threshold definitions
+
+groups:
+  - name: system
+    interval: 30s
+    rules:
+      # Availability
+      - alert: ServiceDown
+        expr: up{job="app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: service
+        annotations:
+          summary: "TaskGH API is DOWN"
+          description: "Service {{ $labels.instance }} has been down for > 1 minute"
+
+      # API Response Time
+      - alert: APISlowResponse
+        expr: histogram_quantile(0.95, http_request_duration_milliseconds) > 300
+        for: 5m
+        labels:
+          severity: high
+          component: api
+        annotations:
+          summary: "API p95 latency > 300ms"
+          description: "Current p95: {{ humanize $value }}ms (threshold: 300ms)"
+
+      # Error Rate
+      - alert: HighErrorRate
+        expr: |
+          (sum(rate(http_requests_total{status=~"5.."}[5m])) /
+           sum(rate(http_requests_total[5m]))) > 0.05
+        for: 5m
+        labels:
+          severity: high
+          component: api
+        annotations:
+          summary: "Error rate > 5%"
+          description: "Current error rate: {{ humanize $value | humanizePercentage }}"
+
+  - name: compute
+    interval: 30s
+    rules:
+      # Container CPU
+      - alert: ContainerCPUHigh
+        expr: container_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: high
+          component: compute
+        annotations:
+          summary: "Container CPU > 80%"
+          description: "Container {{ $labels.container_name }} CPU: {{ $value | humanize }}%"
+
+      # Container Memory
+      - alert: ContainerMemoryHigh
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) > 0.85
+        for: 5m
+        labels:
+          severity: high
+          component: compute
+        annotations:
+          summary: "Container memory > 85%"
+          description: "Container {{ $labels.container_name }} memory: {{ humanize $value | humanizePercentage }}"
+
+      # Task count
+      - alert: DesiredTasksNotRunning
+        expr: |
+          ecs_service_running_count < ecs_service_desired_count
+        for: 5m
+        labels:
+          severity: high
+          component: compute
+        annotations:
+          summary: "ECS: desired tasks not running"
+          description: "Service {{ $labels.service_name }}: {{ $value | int }} running of {{ $labels.desired_count | int }} desired"
+
+  - name: database
+    interval: 30s
+    rules:
+      # Database connections
+      - alert: DatabaseConnectionPoolLow
+        expr: (pg_stat_activity_count / pg_settings_max_connections) > 0.8
+        for: 5m
+        labels:
+          severity: high
+          component: database
+        annotations:
+          summary: "Database connection pool > 80%"
+          description: "Connections: {{ $value | humanize }} (limit: {{ $labels.max_connections | int }})"
+
+      # Replication lag
+      - alert: PostgresReplicationLag
+        expr: pg_replication_lag > 60
+        for: 5m
+        labels:
+          severity: high
+          component: database
+        annotations:
+          summary: "PostgreSQL replication lag > 60s"
+          description: "Lag: {{ humanize $value }}s"
+
+      # Disk space
+      - alert: DatabaseDiskSpaceLow
+        expr: (aws_rds_free_storage_space / aws_rds_allocated_storage) < 0.10
+        for: 10m
+        labels:
+          severity: high
+          component: storage
+        annotations:
+          summary: "Database free space < 10%"
+          description: "Free storage: {{ humanize $value }}GB"
+
+  - name: cache
+    interval: 30s
+    rules:
+      # Redis memory
+      - alert: RedisMemoryHigh
+        expr: (redis_memory_used_bytes / redis_memory_max_bytes) > 0.85
+        for: 5m
+        labels:
+          severity: high
+          component: cache
+        annotations:
+          summary: "Redis memory > 85%"
+          description: "Memory usage: {{ humanize $value | humanizePercentage }}"
+
+      # Redis replication
+      - alert: RedisReplicationError
+        expr: redis_replication_role == 0 and redis_connected_slaves == 0
+        for: 1m
+        labels:
+          severity: high
+          component: cache
+        annotations:
+          summary: "Redis replication not working"
+          description: "Replica not connected to master"
+
+  - name: payments
+    interval: 30s
+    rules:
+      # Payment failures
+      - alert: PaymentGatewayDegraded
+        expr: |
+          (sum(rate(payment_gateway_errors_total[5m])) /
+           sum(rate(payment_gateway_requests_total[5m]))) > 0.10
+        for: 5m
+        labels:
+          severity: high
+          component: payments
+        annotations:
+          summary: "Payment gateway error rate > 10%"
+          description: "Error rate: {{ humanize $value | humanizePercentage }}"
+          runbook: "https://wiki.taskgh.com/runbooks/payment-errors"
+
+      # Payment queue backlog
+      - alert: PaymentQueueHighBacklog
+        expr: payment_queue_pending_count > 1000
+        for: 10m
+        labels:
+          severity: medium
+          component: payments
+        annotations:
+          summary: "Payment queue backlog > 1000"
+          description: "Pending payments: {{ $value | int }}"
+
+  - name: fraud
+    interval: 30s
+    rules:
+      # Fraud spike
+      - alert: FraudSignalsSpike
+        expr: |
+          increase(fraud_signal_count[5m]) > 50
+        for: 5m
+        labels:
+          severity: high
+          component: security
+        annotations:
+          summary: "Fraud signals spike detected"
+          description: "New fraud signals last 5m: {{ $value | int }}"
+          runbook: "https://wiki.taskgh.com/runbooks/fraud-spike"
+
+      # Booking cancel rate
+      - alert: HighBookingCancelRate
+        expr: |
+          (sum(rate(bookings_cancelled_total[1h])) /
+           sum(rate(bookings_total[1h]))) > 0.30
+        for: 30m
+        labels:
+          severity: medium
+          component: booking
+        annotations:
+          summary: "Booking cancelation rate > 30%"
+          description: "Cancelation rate: {{ humanize $value | humanizePercentage }}"
+
+  - name: compliance
+    interval: 1h
+    rules:
+      # Certificate expiry
+      - alert: SSLCertificateExpiringSoon
+        expr: ssl_cert_expiry_seconds < 86400 * 30  # 30 days
+        for: 1h
+        labels:
+          severity: high
+          component: security
+        annotations:
+          summary: "SSL certificate expiring in 30 days"
+          description: "Expires at: {{ $labels.cert_expiry }}"
+
+      # Backup freshness
+      - alert: DatabaseBackupStale
+        expr: |
+          (time() - database_backup_timestamp) > 86400 * 1.5  # > 1.5 days
+        for: 1h
+        labels:
+          severity: high
+          component: backups
+        annotations:
+          summary: "Database backup not fresh"
+          description: "Last backup: {{ humanize (time() - $value) }}s ago"
+

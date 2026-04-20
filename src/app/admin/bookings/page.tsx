@@ -38,7 +38,7 @@ export default async function AdminBookingsPage() {
             <div className="text-[10px] font-black text-muted uppercase tracking-[0.2em] mb-6">Administration</div>
             <nav className="space-y-1.5">
               {[
-                { href: "/admin/dashboard", label: "Overview", icon: Activity, active: false },
+                { href: "/admin", label: "Overview", icon: Activity, active: false },
                 { href: "/admin/users", label: "Users", icon: Users, active: false },
                 { href: "/admin/bookings", label: "Bookings", icon: Briefcase, active: true },
                 { href: "/admin/verifications", label: "Verifications", icon: Shield, active: false },

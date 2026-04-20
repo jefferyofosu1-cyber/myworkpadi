@@ -76,7 +76,7 @@ export default async function AdminDashboard() {
             <div className="text-[10px] font-black text-muted uppercase tracking-[0.2em] mb-6">Administration</div>
             <nav className="space-y-1.5">
               {[
-                { href: "/admin/dashboard", label: "Overview", icon: Activity, active: true },
+                { href: "/admin", label: "Overview", icon: Activity, active: true },
                 { href: "/admin/users", label: "Users", icon: Users, active: false },
                 { href: "/admin/bookings", label: "Bookings", icon: Briefcase, active: false },
                 { href: "/admin/verifications", label: "Verifications", icon: Shield, active: false },

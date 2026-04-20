@@ -17,86 +17,123 @@ export default function HeroSection() {
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.9]);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+    },
+  };
+
   return (
-    <section ref={containerRef} className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background pt-24 transition-colors duration-300">
-      {/* Cinematic White & Green Background */}
-      <div className="absolute inset-0 z-0">
-        <motion.div 
-          animate={{ 
+    <section ref={containerRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-background dark:bg-background pt-24 pb-12">
+      {/* Subtle animated background for depth */}
+      <div className="absolute inset-0 z-0 text-foreground">
+        <motion.div
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.05, 0.1, 0.05],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
             scale: [1, 1.2, 1],
-            rotate: [0, 90, 0],
+            opacity: [0.03, 0.08, 0.03],
           }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-[10%] -left-[5%] w-[60%] h-[60%] bg-primary/5 dark:bg-primary/20 rounded-full blur-[140px]" 
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/5 rounded-full blur-3xl"
         />
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.3, 1],
-            rotate: [0, -120, 0],
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[30%] -right-[5%] w-[50%] h-[50%] bg-accent/5 dark:bg-accent/10 rounded-full blur-[120px]" 
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] dark:opacity-10 mix-blend-overlay" />
       </div>
 
-      <motion.div style={{ y: y1, opacity, scale }} className="container mx-auto px-4 relative z-10 text-center">
-        {/* Floating Verified Badge */}
+      <motion.div
+        style={{ y: y1, opacity, scale }}
+        className="container mx-auto px-4 relative z-10 text-center flex-1 flex flex-col items-center justify-center"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Trust-building badge */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="inline-flex items-center gap-2 bg-foreground/[0.03] border border-primary/20 backdrop-blur-xl px-5 py-2.5 rounded-full mb-10 shadow-sm"
+          variants={itemVariants}
+          className="inline-flex items-center gap-2 bg-tint glass px-6 py-3 rounded-friendly mb-10 hover-glow"
         >
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-green" />
-          <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Verified Professionals Only</span>
+          <CheckCircle2 className="w-4 h-4 text-primary" />
+          <span className="uppercase-label text-sm">Verified Professionals Only</span>
         </motion.div>
 
         {/* Hero Heading */}
-        <motion.h1 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-6xl md:text-9xl font-black text-foreground leading-[0.85] mb-8 tracking-tighter"
-          style={{ fontFamily: "var(--font-jakarta)" }}
+        <motion.h1
+          variants={itemVariants}
+          className="text-5xl md:text-7xl lg:text-8xl font-black text-foreground leading-tight mb-8 tracking-tighter"
         >
-          The smart way <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-[shimmer_4s_infinite_linear]">
-            to get things done.
+          The Smart Way <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+            To Get Things Done
           </span>
         </motion.h1>
 
         {/* Hero Description */}
-        <motion.p 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 1 }}
-          className="text-muted text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-semibold italic opacity-80"
+        <motion.p
+          variants={itemVariants}
+          className="text-muted text-lg md:text-xl max-w-3xl mx-auto mb-12 leading-relaxed font-medium"
         >
-          Connecting you with trusted local workers who get the job done right. Experience the new standard for services in Ghana.
+          Connect with trusted local workers in Ghana. Premium service, guaranteed satisfaction. Your reliable solution for every task.
         </motion.p>
 
         {/* CTA Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+        <motion.div
+          variants={itemVariants}
           className="flex flex-col sm:flex-row items-center justify-center gap-6"
         >
-          <Link 
-            href="/booking" 
-            className="group relative inline-flex items-center gap-3 bg-primary text-white font-black px-12 py-5 rounded-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-primary/20 hover:shadow-primary/40"
-          >
-            <span className="relative z-10 uppercase tracking-wider">Book Now</span>
-            <ArrowRight className="w-5 h-5 relative z-10 transition-transform group-hover:translate-x-1" />
-            <div className="absolute inset-0 bg-gradient-to-r from-accent/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          </Link>
-          <Link 
-            href="/tasker/apply" 
-            className="inline-flex items-center gap-3 bg-foreground/[0.04] border border-border text-foreground font-black px-12 py-5 rounded-2xl hover:bg-foreground/[0.08] transition-all active:scale-95 backdrop-blur-xl uppercase tracking-wider"
-          >
-            Work & Earn
-          </Link>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Link
+              href="/booking"
+              className="group inline-flex items-center gap-3 bg-primary text-white font-black px-10 py-4 rounded-friendly shadow-lg hover:shadow-green transition-all uppercase tracking-wide"
+            >
+              Book Now
+              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Link
+              href="/tasker/apply"
+              className="inline-flex items-center gap-3 bg-tint glass border border-border text-foreground font-black px-10 py-4 rounded-friendly hover:bg-white/10 dark:hover:bg-white/10 transition-all uppercase tracking-wide"
+            >
+              Work & Earn
+            </Link>
+          </motion.div>
+        </motion.div>
+
+        {/* Trust indicators */}
+        <motion.div
+          variants={itemVariants}
+          className="mt-16 flex flex-wrap items-center justify-center gap-8 text-sm text-muted"
+        >
+          <div className="flex items-center gap-2">
+            <Shield className="w-4 h-4 text-primary" />
+            <span>100% Secure</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Star className="w-4 h-4 text-accent" />
+            <span>5-Star Rated</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-primary" />
+            <span>Fast Response</span>
+          </div>
         </motion.div>
 
         {/* Hero Stats */}
@@ -104,7 +141,7 @@ export default function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-24 grid grid-cols-2 lg:grid-cols-4 gap-8 border-t border-border pt-12"
+          className="mt-24 grid grid-cols-2 lg:grid-cols-4 gap-8 border-t border-border pt-12 w-full max-w-4xl"
         >
           {[
             { label: "Vetted Taskers", val: "5k+", sub: "Verified Skills" },

@@ -1,0 +1,448 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - develop
+  pull_request:
+    branches:
+      - main
+      - staging
+      - develop
+  schedule:
+    - cron: '0 2 * * *' # Daily security scan
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ============================================
+  # LINT & CODE QUALITY
+  # ============================================
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint & Format Check
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ESLint
+        run: npm run lint -- --format=json --output-file=eslint-report.json || true
+      
+      - name: Run Prettier
+        run: npm run format:check
+      
+      - name: Type check
+        run: npm run type-check
+      
+      - name: Upload lint results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: lint-results
+          path: eslint-report.json
+
+  # ============================================
+  # UNIT & INTEGRATION TESTS
+  # ============================================
+  test:
+    runs-on: ubuntu-latest
+    name: Tests
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run unit tests
+        run: npm run test:unit -- --coverage
+        env:
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
+      
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          fail_ci_if_error: false
+
+  # ============================================
+  # SECURITY SCANNING
+  # ============================================
+  security:
+    runs-on: ubuntu-latest
+    name: Security Scan
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run npm audit
+        run: npm audit --audit-level=low
+      
+      - name: Dependency check with Snyk
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
+      
+      - name: SAST scan with SonarQube
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
+
+  # ============================================
+  # BUILD DOCKER IMAGE
+  # ============================================
+  build:
+    runs-on: ubuntu-latest
+    name: Build Docker Image
+    needs: [lint, test, security]
+    
+    permissions:
+      contents: read
+      packages: write
+    
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
+      digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+      
+      - name: Build and push image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./taskgh-architecture/docker/Dockerfile.prod
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+  # ============================================
+  # SCAN DOCKER IMAGE
+  # ============================================
+  scan-image:
+    runs-on: ubuntu-latest
+    name: Scan Docker Image
+    needs: build
+    if: github.event_name != 'pull_request'
+    
+    steps:
+      - name: Run Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ needs.build.outputs.image }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ============================================
+  # DEPLOY TO STAGING
+  # ============================================
+  deploy-staging:
+    runs-on: ubuntu-latest
+    name: Deploy to Staging
+    needs: build
+    if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/develop'
+    
+    environment:
+      name: staging
+      url: https://staging-api.taskgh.com
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+      
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster taskgh-cluster-staging \
+            --service taskgh-service \
+            --force-new-deployment \
+            --region eu-west-1
+      
+      - name: Wait for deployment
+        run: |
+          aws ecs wait services-stable \
+            --cluster taskgh-cluster-staging \
+            --services taskgh-service \
+            --region eu-west-1
+      
+      - name: Run smoke tests
+        run: npm run test:smoke
+        env:
+          API_BASE_URL: https://staging-api.taskgh.com
+      
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            {
+              "text": "Staging deployment ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Staging Deployment* ${{ job.status }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+
+  # ============================================
+  # MANUAL APPROVAL & PRODUCTION DEPLOYMENT
+  # ============================================
+  deploy-production:
+    runs-on: ubuntu-latest
+    name: Deploy to Production
+    needs: build
+    if: github.ref == 'refs/heads/main' && startsWith(github.ref, 'refs/tags/v')
+    
+    environment:
+      name: production
+      url: https://api.taskgh.com
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-region: eu-west-1
+      
+      - name: Backup database
+        run: |
+          aws rds create-db-snapshot \
+            --db-instance-identifier taskgh-db \
+            --db-snapshot-identifier taskgh-db-pre-deploy-$(date +%s) \
+            --region eu-west-1
+      
+      - name: Deploy to ECS (Blue-Green)
+        run: |
+          # Blue-Green deployment strategy
+          aws ecs update-service \
+            --cluster taskgh-cluster \
+            --service taskgh-service \
+            --force-new-deployment \
+            --region eu-west-1
+      
+      - name: Wait for deployment
+        run: |
+          aws ecs wait services-stable \
+            --cluster taskgh-cluster \
+            --services taskgh-service \
+            --region eu-west-1
+      
+      - name: Health check
+        run: |
+          for i in {1..30}; do
+            if curl -f https://api.taskgh.com/health; then
+              echo "Health check passed"
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
+      
+      - name: Run production smoke tests
+        run: npm run test:smoke:prod
+        env:
+          API_BASE_URL: https://api.taskgh.com
+      
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Changes in this Release:
+            - See commit history for details
+          draft: false
+          prerelease: false
+      
+      - name: Notify PagerDuty
+        run: |
+          curl -X POST https://events.pagerduty.com/v2/enqueue \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "routing_key": "${{ secrets.PAGERDUTY_ROUTING_KEY }}",
+              "event_action": "trigger",
+              "dedup_key": "deployment-${{ github.sha }}",
+              "payload": {
+                "summary": "TaskGH Production Deployment Successful",
+                "severity": "info",
+                "source": "GitHub Actions",
+                "custom_details": {
+                  "version": "${{ github.ref }}",
+                  "commit": "${{ github.sha }}"
+                }
+              }
+            }'
+      
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            {
+              "text": "🚀 Production deployment successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Production Deployment Successful*\n${{ github.ref }} deployed to production"
+                  }
+                }
+              ]
+            }
+
+  # ============================================
+  # ROLLBACK (IF NEEDED)
+  # ============================================
+  rollback:
+    runs-on: ubuntu-latest
+    name: Rollback
+    if: failure() && github.ref == 'refs/heads/main'
+    needs: deploy-production
+    
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-region: eu-west-1
+      
+      - name: Rollback ECS deployment
+        run: |
+          aws ecs update-service \
+            --cluster taskgh-cluster \
+            --service taskgh-service \
+            --force-new-deployment \
+            --region eu-west-1
+      
+      - name: Alert on-call engineer
+        run: |
+          curl -X POST https://api.pagerduty.com/incidents \
+            -H 'Authorization: Token token=${{ secrets.PAGERDUTY_TOKEN }}' \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "incident": {
+                "type": "incident",
+                "title": "TaskGH Production Deployment Rollback",
+                "urgency": "high",
+                "service": {
+                  "id": "${{ secrets.PAGERDUTY_SERVICE_ID }}",
+                  "type": "service_reference"
+                }
+              }
+            }'
+

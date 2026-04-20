@@ -1,0 +1,90 @@
+# Production Dockerfile for TaskGH
+# Multi-stage build for optimal image size and security
+
+# ============================================
+# STAGE 1: DEPENDENCIES BUILDER
+# ============================================
+FROM node:20-alpine AS dependencies
+
+WORKDIR /app
+
+# Copy package.json for layer caching
+COPY package*.json ./
+
+# Install dependencies with production flag
+RUN npm ci --only=production && \
+    npm cache clean --force
+
+# ============================================
+# STAGE 2: SOURCE BUILDER
+# ============================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++ cairo-dev jpeg-dev pango-dev giflib-dev
+
+# Copy all source files
+COPY . .
+
+# Copy production dependencies from previous stage
+COPY --from=dependencies /app/node_modules ./node_modules
+
+# Build application (e.g., TypeScript compilation, Next.js build)
+RUN npm run build
+
+# ============================================
+# STAGE 3: RUNTIME (MINIMAL)
+# ============================================
+FROM node:20-alpine
+
+# Set NODE_ENV to production
+ENV NODE_ENV=production
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init curl
+
+# Copy production dependencies from stage 1
+COPY --from=dependencies /app/node_modules ./node_modules
+
+# Copy built application from stage 2
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package*.json ./
+
+# Copy only necessary files
+COPY --chown=nodejs:nodejs src ./src
+COPY --chown=nodejs:nodejs tsconfig.json ./
+
+# Security: set minimal permissions
+RUN chmod -R 755 /app && \
+    chown -R nodejs:nodejs /app
+
+# Switch to non-root user
+USER nodejs
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-3000}/health || exit 1
+
+# Expose port
+EXPOSE 3000
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["/usr/sbin/dumb-init", "--"]
+
+# Start application
+CMD ["node", ".next/standalone/server.js"]
+
+# Metadata
+LABEL maintainer="TaskGH Engineering <engineering@taskgh.com>"
+LABEL version="1.0.0"
+LABEL description="TaskGH Marketplace API - Production"
+

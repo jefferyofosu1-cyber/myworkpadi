@@ -1,0 +1,991 @@
+openapi: 3.0.0
+info:
+  title: TaskGH Marketplace API
+  description: >
+    Production REST API for TaskGH marketplace platform.
+    Real-time events via WebSocket at /ws.
+  version: 1.0.0
+  contact:
+    name: TaskGH Engineering
+    email: engineering@taskgh.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.taskgh.com/v1
+    description: Production
+  - url: https://staging-api.taskgh.com/v1
+    description: Staging
+  - url: http://localhost:3000/v1
+    description: Local Development
+
+tags:
+  - name: Authentication
+    description: User authentication and token management
+  - name: Users
+    description: User profile operations
+  - name: Bookings
+    description: Booking creation and management
+  - name: Taskers
+    description: Tasker profile and verification
+  - name: Payments
+    description: Payment processing and transactions
+  - name: Reviews
+    description: Booking reviews and ratings
+  - name: Admin
+    description: Admin operations (restricted)
+  - name: Corporate
+    description: Corporate account management
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        201:
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        409:
+          $ref: '#/components/responses/Conflict'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      operationId: refreshToken
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout user
+      operationId: logout
+      security:
+        - BearerAuth: []
+      responses:
+        204:
+          description: Logged out successfully
+
+  /users/profile:
+    get:
+      tags:
+        - Users
+      summary: Get current user profile
+      operationId: getProfile
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags:
+        - Users
+      summary: Update user profile
+      operationId: updateProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        200:
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        400:
+          $ref: '#/components/responses/BadRequest'
+
+  /bookings:
+    post:
+      tags:
+        - Bookings
+      summary: Create new booking
+      operationId: createBooking
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        201:
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        402:
+          description: Payment required
+        503:
+          description: No taskers available
+
+    get:
+      tags:
+        - Bookings
+      summary: List user bookings
+      operationId: listBookings
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, searching, assigned, accepted, in_progress, completed, cancelled, disputed]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        200:
+          description: Bookings list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingList'
+
+  /bookings/{bookingId}:
+    get:
+      tags:
+        - Bookings
+      summary: Get booking details
+      operationId: getBooking
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingDetail'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Bookings
+      summary: Update booking
+      operationId: updateBooking
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBookingRequest'
+      responses:
+        200:
+          description: Booking updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+  /bookings/{bookingId}/cancel:
+    post:
+      tags:
+        - Bookings
+      summary: Cancel booking
+      operationId: cancelBooking
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        200:
+          description: Booking cancelled
+
+  /taskers:
+    get:
+      tags:
+        - Taskers
+      summary: Find nearby taskers
+      operationId: findTaskers
+      parameters:
+        - name: latitude
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: longitude
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: radius_km
+          in: query
+          schema:
+            type: integer
+            default: 5
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: min_rating
+          in: query
+          schema:
+            type: number
+            default: 4.0
+      responses:
+        200:
+          description: Available taskers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskerProfile'
+
+  /taskers/{taskerId}:
+    get:
+      tags:
+        - Taskers
+      summary: Get tasker profile
+      operationId: getTaskerProfile
+      parameters:
+        - name: taskerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Tasker profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskerProfileDetail'
+
+  /taskers/{taskerId}/availability:
+    put:
+      tags:
+        - Taskers
+      summary: Update tasker availability
+      operationId: updateAvailability
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: taskerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityUpdate'
+      responses:
+        200:
+          description: Availability updated
+
+  /payments:
+    post:
+      tags:
+        - Payments
+      summary: Process payment
+      operationId: processPayment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        201:
+          description: Payment initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        402:
+          description: Payment failed
+
+  /payments/{paymentId}/status:
+    get:
+      tags:
+        - Payments
+      summary: Get payment status
+      operationId: getPaymentStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Payment status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatus'
+
+  /payments/{paymentId}/refund:
+    post:
+      tags:
+        - Payments
+      summary: Request refund
+      operationId: requestRefund
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                amount:
+                  type: number
+      responses:
+        201:
+          description: Refund initiated
+
+  /reviews:
+    post:
+      tags:
+        - Reviews
+      summary: Create booking review
+      operationId: createReview
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewRequest'
+      responses:
+        201:
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+
+  /admin/users/{userId}/suspend:
+    post:
+      tags:
+        - Admin
+      summary: Suspend user account
+      operationId: suspendUser
+      security:
+        - BearerAuth: []
+        - AdminAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                duration_days:
+                  type: integer
+      responses:
+        200:
+          description: User suspended
+
+  /admin/disputes:
+    get:
+      tags:
+        - Admin
+      summary: List disputes for resolution
+      operationId: listDisputes
+      security:
+        - BearerAuth: []
+        - AdminAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        200:
+          description: Disputes list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dispute'
+
+  /admin/disputes/{disputeId}/resolve:
+    post:
+      tags:
+        - Admin
+      summary: Resolve dispute
+      operationId: resolveDispute
+      security:
+        - BearerAuth: []
+        - AdminAuth: []
+      parameters:
+        - name: disputeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resolution:
+                  type: string
+                  enum: [favoring_customer, favoring_tasker]
+                notes:
+                  type: string
+      responses:
+        200:
+          description: Dispute resolved
+
+components:
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - full_name
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        full_name:
+          type: string
+        role:
+          type: string
+          enum: [customer, tasker]
+        phone_number:
+          type: string
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          default: Bearer
+        expires_in:
+          type: integer
+          description: Seconds
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        phone_number:
+          type: string
+        full_name:
+          type: string
+        role:
+          type: string
+        avatar_url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+        phone_number:
+          type: string
+        avatar_url:
+          type: string
+        preferences:
+          type: object
+
+    CreateBookingRequest:
+      type: object
+      required:
+        - category_id
+        - service_title
+        - service_description
+        - scheduled_date
+      properties:
+        category_id:
+          type: string
+          format: uuid
+        service_title:
+          type: string
+        service_description:
+          type: string
+        scheduled_date:
+          type: string
+          format: date
+        scheduled_time_start:
+          type: string
+          format: time
+        duration_hours:
+          type: integer
+        service_address_id:
+          type: string
+          format: uuid
+        customer_notes:
+          type: string
+        guest_name:
+          type: string
+        guest_email:
+          type: string
+        guest_phone:
+          type: string
+
+    UpdateBookingRequest:
+      type: object
+      properties:
+        service_description:
+          type: string
+        scheduled_date:
+          type: string
+          format: date
+        scheduled_time_start:
+          type: string
+          format: time
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        booking_number:
+          type: string
+        status:
+          type: string
+          enum: [pending, searching, assigned, accepted, in_progress, completed, cancelled, disputed]
+        service_title:
+          type: string
+        total_amount:
+          type: number
+        scheduled_date:
+          type: string
+          format: date
+        tasker:
+          $ref: '#/components/schemas/TaskerProfile'
+        created_at:
+          type: string
+          format: date-time
+
+    BookingDetail:
+      allOf:
+        - $ref: '#/components/schemas/Booking'
+        - type: object
+          properties:
+            service_description:
+              type: string
+            customer_notes:
+              type: string
+            tasker_notes:
+              type: string
+            payment:
+              $ref: '#/components/schemas/Payment'
+            review:
+              $ref: '#/components/schemas/Review'
+
+    BookingList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Booking'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    TaskerProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        avatar_url:
+          type: string
+        average_rating:
+          type: number
+        review_count:
+          type: integer
+        completion_rate:
+          type: number
+        is_available:
+          type: boolean
+
+    TaskerProfileDetail:
+      allOf:
+        - $ref: '#/components/schemas/TaskerProfile'
+        - type: object
+          properties:
+            bio:
+              type: string
+            skills:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  proficiency_level:
+                    type: string
+            reviews:
+              type: array
+              items:
+                $ref: '#/components/schemas/Review'
+
+    AvailabilityUpdate:
+      type: object
+      properties:
+        is_available:
+          type: boolean
+        service_radius_km:
+          type: integer
+
+    PaymentRequest:
+      type: object
+      required:
+        - booking_id
+        - amount
+        - payment_method
+      properties:
+        booking_id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+        payment_method:
+          type: string
+          enum: [card, mobile_money, bank_transfer]
+        payment_token:
+          type: string
+          description: Tokenized payment data
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        booking_id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [pending, processing, completed, failed, refunded]
+        payment_method:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    PaymentStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        transaction_id:
+          type: string
+        error_message:
+          type: string
+
+    CreateReviewRequest:
+      type: object
+      required:
+        - booking_id
+        - rating
+      properties:
+        booking_id:
+          type: string
+          format: uuid
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        title:
+          type: string
+        comment:
+          type: string
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        booking_id:
+          type: string
+          format: uuid
+        reviewer:
+          $ref: '#/components/schemas/UserProfile'
+        rating:
+          type: integer
+        title:
+          type: string
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Dispute:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        booking_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        reason:
+          type: string
+        amount:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        has_more:
+          type: boolean
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+              errors:
+                type: array
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+
+    Conflict:
+      description: Conflict (e.g., duplicate email)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+    AdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Requires admin role with MFA
+
