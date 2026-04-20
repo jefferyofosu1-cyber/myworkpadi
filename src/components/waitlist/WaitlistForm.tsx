@@ -26,7 +26,11 @@ export default function WaitlistForm() {
     full_name: "",
     phone_number: "",
     email: "",
-    area: "",
+    city: "",
+    town: "",
+    street: "",
+    landmark: "",
+    house_number: "",
     service_needed: "",
     user_type: "home" as "home" | "business",
   });
@@ -54,7 +58,12 @@ export default function WaitlistForm() {
             full_name: formData.full_name,
             phone_number: formData.phone_number,
             email: formData.email,
-            area: formData.area,
+            city: formData.city,
+            town: formData.town,
+            street: formData.street,
+            landmark: formData.landmark,
+            house_number: formData.house_number,
+            area: `${formData.city}, ${formData.town}`, // Populate legacy area field
             service_needed: formData.service_needed,
             user_type: formData.user_type,
           },
@@ -187,25 +196,66 @@ export default function WaitlistForm() {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <div>
-                <label className="block text-xs font-black text-primary uppercase tracking-widest mb-4 px-1 flex items-center gap-2">
-                  <MapPin className="w-4 h-4" /> Your Area
+              <div className="space-y-4">
+                <label className="block text-xs font-black text-primary uppercase tracking-widest px-1 flex items-center gap-2">
+                  <MapPin className="w-4 h-4" /> Precise Location
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {WAITLIST_AREAS.map((area) => (
-                    <button
-                      key={area}
-                      type="button"
-                      onClick={() => updateField("area", area)}
-                      className={`px-3 py-3 rounded-xl border-2 text-[10px] font-black uppercase tracking-tight transition-all ${
-                        formData.area === area 
-                          ? "bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-105" 
-                          : "bg-background border-border text-muted hover:border-primary/50"
-                      }`}
-                    >
-                      {area}
-                    </button>
-                  ))}
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-bold text-muted uppercase tracking-tight">City</label>
+                    <input
+                      required
+                      value={formData.city}
+                      onChange={(e) => updateField("city", e.target.value)}
+                      placeholder="e.g. Accra"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-border focus:border-primary outline-none transition-all bg-background text-sm font-medium"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-bold text-muted uppercase tracking-tight">Town</label>
+                    <input
+                      required
+                      value={formData.town}
+                      onChange={(e) => updateField("town", e.target.value)}
+                      placeholder="e.g. Osu"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-border focus:border-primary outline-none transition-all bg-background text-sm font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold text-muted uppercase tracking-tight">Street Name</label>
+                  <input
+                    required
+                    value={formData.street}
+                    onChange={(e) => updateField("street", e.target.value)}
+                    placeholder="e.g. Oxford Street"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-border focus:border-primary outline-none transition-all bg-background text-sm font-medium"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold text-muted uppercase tracking-tight">Landmark (Optional)</label>
+                  <input
+                    value={formData.landmark}
+                    onChange={(e) => updateField("landmark", e.target.value)}
+                    placeholder="e.g. Near Shoprite"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-border focus:border-primary outline-none transition-all bg-background text-sm font-medium"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold text-muted uppercase tracking-tight">House Number (Optional)</label>
+                  <div className="relative">
+                    <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted/50" />
+                    <input
+                      value={formData.house_number}
+                      onChange={(e) => updateField("house_number", e.target.value)}
+                      placeholder="e.g. GA-123-4567"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-border focus:border-primary outline-none transition-all bg-background text-sm font-medium"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -220,7 +270,7 @@ export default function WaitlistForm() {
                 <button
                   type="button"
                   onClick={nextStep}
-                  disabled={!formData.area}
+                  disabled={!formData.city || !formData.town || !formData.street}
                   className="flex-[2] bg-primary hover:bg-primary-dark text-white font-black py-4 rounded-2xl shadow-xl shadow-primary/20 transition-all disabled:opacity-50 active:scale-95"
                 >
                   Next Step
