@@ -2,10 +2,29 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const clientIp = request.ip || request.headers.get("x-forwarded-for")?.split(",")[0] || "";
+  const DEVELOPER_IP = "41.204.44.36";
+
+  // 1. Define Whitelisted Routes (Accessible to everyone)
+  const isPublicAsset = 
+    pathname.startsWith("/_next") || 
+    pathname.startsWith("/api") || 
+    pathname.startsWith("/favicon.ico") ||
+    pathname.match(/\.(png|jpg|jpeg|gif|webp|svg|css|js)$/);
+
+  const isWaitlistPage = pathname === "/" || pathname === "/waitlist";
+
+  // 2. Anticipation Mode Logic
+  // If not the developer and not a public asset/waitlist page, redirect to home
+  if (clientIp !== DEVELOPER_IP && !isPublicAsset && !isWaitlistPage) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  // 3. Normal App Logic for Developer or Whitelisted Routes
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // Skip auth checks if Supabase is not configured
   if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.startsWith("your_")) {
     return NextResponse.next({ request });
   }
@@ -29,17 +48,7 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
-
-  // Public routes that share a protected prefix
-  const publicPaths = ["/tasker/apply"];
-  if (publicPaths.some(p => pathname.startsWith(p))) {
-    return supabaseResponse;
-  }
+  const { data: { user } } = await supabase.auth.getUser();
 
   // Protected routes access control
   const isCustomerRoute = pathname.startsWith("/customer");
@@ -51,11 +60,9 @@ export async function middleware(request: NextRequest) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
-      url.searchParams.set("redirectTo", pathname);
       return NextResponse.redirect(url);
     }
 
-    // Role Enforcement (RBAC)
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -63,44 +70,18 @@ export async function middleware(request: NextRequest) {
       .single();
 
     const role = profile?.role;
-
-    // Check if the user has permission to access the requested route
     const hasAccess = 
       (isCustomerRoute && role === "customer") ||
       (isTaskerRoute && role === "tasker") ||
       (isAdminRoute && role === "admin");
 
     if (!hasAccess) {
-      // Redirect to their respective dashboard if they try to access another role's area
       const url = request.nextUrl.clone();
       if (role === "admin") url.pathname = "/admin";
       else if (role === "tasker") url.pathname = "/tasker/dashboard";
       else url.pathname = "/customer/dashboard";
       
-      // CRITICAL: Prevent infinite redirect loop
-      if (url.pathname !== pathname) {
-        return NextResponse.redirect(url);
-      }
-    }
-  }
-
-  // Redirect authenticated users away from auth pages
-  const authPages = ["/login", "/signup", "/forgot-password"];
-  if (user && authPages.includes(pathname)) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    const role = profile?.role;
-    const url = request.nextUrl.clone();
-    if (role === "admin") url.pathname = "/admin";
-    else if (role === "tasker") url.pathname = "/tasker/dashboard";
-    else url.pathname = "/customer/dashboard";
-    
-    if (url.pathname !== pathname) {
-      return NextResponse.redirect(url);
+      if (url.pathname !== pathname) return NextResponse.redirect(url);
     }
   }
 
