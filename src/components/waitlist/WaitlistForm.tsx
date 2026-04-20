@@ -14,7 +14,6 @@ import {
   Briefcase
 } from "lucide-react";
 import { WAITLIST_AREAS, WAITLIST_SERVICES } from "@/constants/waitlist";
-import { createClient } from "@/utils/supabase/client";
 
 export default function WaitlistForm() {
   const [step, setStep] = useState(1);
@@ -48,29 +47,22 @@ export default function WaitlistForm() {
     setError(null);
 
     try {
-      const supabase = createClient();
-      if (!supabase) throw new Error("Supabase not configured");
+      const scriptUrl = process.env.NEXT_PUBLIC_WAITLIST_SHEET_URL;
+      
+      if (!scriptUrl) {
+        throw new Error("Waitlist backend is not yet configured. Please add NEXT_PUBLIC_WAITLIST_SHEET_URL to your environment variables.");
+      }
 
-      const { error: submitError } = await supabase
-        .from("waitlist_entries")
-        .insert([
-          {
-            full_name: formData.full_name,
-            phone_number: formData.phone_number,
-            email: formData.email,
-            city: formData.city,
-            town: formData.town,
-            street: formData.street,
-            landmark: formData.landmark,
-            house_number: formData.house_number,
-            area: `${formData.city}, ${formData.town}`, // Populate legacy area field
-            service_needed: formData.service_needed,
-            user_type: formData.user_type,
-          },
-        ]);
+      const response = await fetch(scriptUrl, {
+        method: "POST",
+        mode: "no-cors", // Apps Script works best with no-cors if we don't need the JSON response back
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-      if (submitError) throw submitError;
-
+      // With no-cors, we can't check response.ok, so we assume success if no error is thrown
       setIsSuccess(true);
     } catch (err: any) {
       console.error("Waitlist error:", err);
