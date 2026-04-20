@@ -15,35 +15,35 @@ export default function WaitlistPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Deep Green Header Section */}
-      <section className="bg-primary text-white pt-12 pb-32 px-4 relative overflow-hidden">
+      {/* Clean White Header Section */}
+      <section className="bg-white text-foreground pt-12 pb-32 px-4 relative overflow-hidden">
         {/* Subtle Decorative Background Rings */}
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[600px] h-[600px] border-[40px] border-white/5 rounded-full" />
-        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[400px] h-[400px] border-[20px] border-white/5 rounded-full" />
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[600px] h-[600px] border-[40px] border-primary/5 rounded-full" />
+        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[400px] h-[400px] border-[20px] border-primary/5 rounded-full" />
 
         <div className="max-w-4xl mx-auto relative z-10 text-center">
           {/* Header Branding */}
           <div className="flex flex-col items-center gap-6 mb-12">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30">
-                <Search className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-primary/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-primary/20">
+                <Search className="w-5 h-5 text-primary" />
               </div>
-              <span className="text-3xl font-black tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
-                Task<span className="text-accent underline decoration-white/30 decoration-2 underline-offset-4">GH</span>
+              <span className="text-3xl font-black tracking-tight text-foreground" style={{ fontFamily: "var(--font-jakarta)" }}>
+                Task<span className="text-primary underline decoration-primary/20 decoration-2 underline-offset-4">GH</span>
               </span>
             </div>
             
-            <div className="inline-flex items-center gap-2 bg-black/20 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-white/90">
+            <div className="inline-flex items-center gap-2 bg-primary/5 backdrop-blur-md border border-primary/10 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-primary">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
               Launching soon in Accra — Get early access
             </div>
           </div>
 
           {/* Hero Text */}
-          <h1 className="text-4xl md:text-6xl font-black mb-6 leading-[1.1] tracking-tighter" style={{ fontFamily: "var(--font-jakarta)" }}>
-            Need a trusted plumber, electrician, <span className="text-accent">AC guy</span> or handyman?
+          <h1 className="text-4xl md:text-6xl font-black mb-6 leading-[1.1] tracking-tighter text-black" style={{ fontFamily: "var(--font-jakarta)" }}>
+            Need a trusted plumber, electrician, <span className="text-primary">AC guy</span> or handyman?
           </h1>
-          <p className="text-white/80 text-lg md:text-xl max-w-2xl mx-auto mb-10 font-medium">
+          <p className="text-slate-500 text-lg md:text-xl max-w-2xl mx-auto mb-10 font-medium">
             Join the TaskGH early access list and be first to book trusted artisans in your area.
           </p>
 
@@ -55,18 +55,18 @@ export default function WaitlistPage() {
               { label: "Easy booking", icon: CheckCircle2 },
               { label: "Launching soon", icon: Zap },
             ].map((badge, i) => (
-              <div key={i} className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/10 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white">
-                <badge.icon className="w-3.5 h-3.5 text-accent" />
+              <div key={i} className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600">
+                <badge.icon className="w-3.5 h-3.5 text-primary" />
                 {badge.label}
               </div>
             ))}
           </div>
 
           {/* Social Proof Badge */}
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-4 md:p-6 inline-flex flex-col sm:flex-row items-center gap-4 shadow-2xl">
+          <div className="bg-white border border-slate-100 rounded-3xl p-4 md:p-6 inline-flex flex-col sm:flex-row items-center gap-4 shadow-xl">
             <div className="flex -space-x-3">
               {['A', 'K', 'S', 'E', 'B'].map((initial, i) => (
-                <div key={i} className={`w-10 h-10 rounded-full border-4 border-primary/50 flex items-center justify-center text-xs font-black shadow-lg bg-gradient-to-br ${
+                <div key={i} className={`w-10 h-10 rounded-full border-4 border-white flex items-center justify-center text-xs font-black shadow-lg bg-gradient-to-br ${
                   i % 2 === 0 ? "from-accent to-accent-dark" : "from-primary-light to-primary"
                 }`}>
                   {initial}
@@ -74,8 +74,8 @@ export default function WaitlistPage() {
               ))}
             </div>
             <div className="text-left">
-              <div className="text-2xl font-black text-white">{waitlistCount}</div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-white/60">Ghanaians already on the list</div>
+              <div className="text-2xl font-black text-black">{waitlistCount}</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ghanaians already on the list</div>
             </div>
           </div>
         </div>
