@@ -48,8 +48,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headerList = headers();
-  const forwardedFor = (await headerList).get("x-forwarded-for");
+  const headerList = await headers();
+  const forwardedFor = headerList.get("x-forwarded-for");
   const ip = forwardedFor ? forwardedFor.split(",")[0] : "0.0.0.0";
   const isDeveloper = ip === "41.204.44.36";
 
