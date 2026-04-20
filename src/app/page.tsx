@@ -13,7 +13,6 @@ import WaitlistForm from "@/components/waitlist/WaitlistForm";
 import { WAITLIST_PERKS } from "@/constants/waitlist";
 
 export default function HomePage() {
-  const waitlistCount = "1,247";
 
   return (
     <div className="min-h-screen bg-white">
@@ -64,22 +63,6 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Social Proof Badge */}
-          <div className="bg-white border border-slate-100 rounded-3xl p-4 md:p-6 inline-flex flex-col sm:flex-row items-center gap-4 shadow-xl">
-            <div className="flex -space-x-3">
-              {['A', 'K', 'S', 'E', 'B'].map((initial, i) => (
-                <div key={i} className={`w-10 h-10 rounded-full border-4 border-white flex items-center justify-center text-xs font-black shadow-lg bg-gradient-to-br ${
-                  i % 2 === 0 ? "from-accent to-accent-dark" : "from-primary-light to-primary"
-                }`}>
-                  {initial}
-                </div>
-              ))}
-            </div>
-            <div className="text-left">
-              <div className="text-2xl font-black text-black">{waitlistCount}</div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ghanaians already on the list</div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -132,9 +115,6 @@ export default function HomePage() {
 
       {/* Branding Footer */}
       <footer className="py-12 px-4 text-center">
-        <div className="flex items-center justify-center gap-2 text-muted text-sm font-bold uppercase tracking-widest mb-4">
-          <span className="text-primary">{waitlistCount}</span> people already joined
-        </div>
         <div className="flex items-center justify-center gap-2 mb-8">
           <div className="w-6 h-6 bg-primary/10 rounded-lg flex items-center justify-center">
             <Search className="w-3 h-3 text-primary" />
