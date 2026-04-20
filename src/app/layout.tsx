@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -42,11 +43,16 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headerList = headers();
+  const forwardedFor = (await headerList).get("x-forwarded-for");
+  const ip = forwardedFor ? forwardedFor.split(",")[0] : "0.0.0.0";
+  const isDeveloper = ip === "41.204.44.36";
+
   return (
     <html lang="en" className={`${inter.variable} ${jakarta.variable} h-full`} suppressHydrationWarning>
       <head>
@@ -67,11 +73,11 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col antialiased bg-background text-foreground transition-colors duration-300">
         <ThemeProvider>
-          <Navbar />
+          {isDeveloper && <Navbar />}
           <main className="flex-grow">
             {children}
           </main>
-          <Footer />
+          {isDeveloper && <Footer />}
         </ThemeProvider>
       </body>
     </html>
